@@ -1,0 +1,286 @@
+@import 'tailwindcss';
+
+/* ============================================================================
+   Blueprint a lápis — mattgoulart.com
+   Paper único + escala pencil + 3 fontes (Inter Tight / Architects Daughter / JetBrains Mono).
+   Zero saturação. Cada decisão de UI é anotada visivelmente.
+   ============================================================================ */
+
+@theme {
+  /* —— Typography ————————————————————————————————————————————————————————— */
+  --font-sans: var(--font-sans), 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-hand), 'Architects Daughter', 'Comic Sans MS', cursive;
+  --font-mono: var(--font-mono), ui-monospace, 'JetBrains Mono', SFMono-Regular, monospace;
+
+  /* Inter Tight features — stylistic sets curados pra leitura editorial */
+  --font-feature-sans: 'cv11', 'ss01', 'ss03', 'cv02';
+
+  /* Modular scale 1.25 (Major Third) — 12 → 14 → 16 → 20 → 24 → 30 → 36 → 48 → 64 → 88 → 120 */
+  --text-xs: 0.75rem;     /* 12 — mono labels, dimensions */
+  --text-sm: 0.8125rem;   /* 13 — annotations menor */
+  --text-base: 1rem;      /* 16 — body padrão */
+  --text-md: 1.125rem;    /* 18 — body grande / annotation primária */
+  --text-lg: 1.25rem;     /* 20 */
+  --text-xl: 1.5rem;      /* 24 */
+  --text-2xl: 1.875rem;   /* 30 */
+  --text-3xl: 2.25rem;    /* 36 */
+  --text-4xl: 3rem;       /* 48 */
+  --text-5xl: 4rem;       /* 64 */
+  --text-6xl: 5.5rem;     /* 88 */
+  --text-7xl: 7.5rem;     /* 120 — display monumental */
+
+  /* —— Motion grammar ——————————————————————————————————————————————————— */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --duration-fast: 180ms;
+  --duration-base: 320ms;
+  --duration-slow: 640ms;
+
+  /* —— Radius — quase nenhum. Caderno não tem cantos arredondados. ——————— */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+}
+
+/* ============================================================================
+   Color tokens — paper + pencil only
+   Light (default): paper-hi cream + grafite escuro.
+   Dark: paper-deep grafite + texto cream.
+   ============================================================================ */
+
+:root {
+  /* paper — único background */
+  --paper: #fbf6e9;
+  --paper-2: #f5efde;
+  --paper-deep: #ede4cd;
+
+  /* pencil scale — substitui qualquer cor saturada */
+  --pencil-darkest: #1a1612;   /* texto display + principal */
+  --pencil-dark: #2a2520;      /* texto body */
+  --pencil: #3a352e;           /* annotations principais */
+  --pencil-mid: #5e5852;       /* annotations secundárias, mono */
+  --pencil-light: #8a847a;     /* dimension lines, dashes */
+  --pencil-faint: #b8b2a6;     /* marcas auxiliares */
+
+  /* lines */
+  --line: rgba(58, 53, 46, 0.22);
+  --line-strong: rgba(58, 53, 46, 0.5);
+  --grid: rgba(58, 53, 46, 0.08);
+
+  /* selection */
+  --selection: rgba(58, 53, 46, 0.18);
+
+  /* backdrop pra dialog/drawer */
+  --backdrop: rgba(26, 22, 18, 0.35);
+}
+
+/* Dark mode → vira a paleta "carvao-giz" no <PalettePicker>. As CSS vars são
+   sobrescritas em runtime via style.setProperty, então não precisa de `.dark`. */
+
+/* Tailwind v4 inline color tokens — disponível via classes utilitárias */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-paper-deep: var(--paper-deep);
+
+  --color-pencil-darkest: var(--pencil-darkest);
+  --color-pencil-dark: var(--pencil-dark);
+  --color-pencil: var(--pencil);
+  --color-pencil-mid: var(--pencil-mid);
+  --color-pencil-light: var(--pencil-light);
+  --color-pencil-faint: var(--pencil-faint);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  /* aliases semânticos pra compat */
+  --color-background: var(--paper);
+  --color-foreground: var(--pencil-darkest);
+  --color-muted: var(--paper-2);
+  --color-muted-foreground: var(--pencil-mid);
+  --color-border: var(--line);
+}
+
+/* ============================================================================
+   Base
+   ============================================================================ */
+
+* {
+  border-color: var(--line);
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--pencil-darkest);
+}
+
+html {
+  color-scheme: light dark;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* WCAG 2.4.11 — compensa header sticky em anchor jumps */
+  scroll-padding-top: 5rem;
+}
+
+html {
+  background: var(--paper);
+  color: var(--pencil-darkest);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: var(--font-feature-sans);
+  font-optical-sizing: auto;
+  font-size: var(--text-base);
+  line-height: 1.55;
+  letter-spacing: -0.011em;
+  min-height: 100dvh;
+  /* Body transparente pra deixar o grid do ::before aparecer entre html e body. */
+  background: transparent;
+}
+
+/* Grid de papel — fade-out conforme rola (atrás do conteúdo) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 0 0;
+  /* fade pra baixo: grid forte no topo, some até ~100dvh */
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 60dvh, transparent 100dvh);
+  mask-image: linear-gradient(to bottom, black 0%, black 60dvh, transparent 100dvh);
+}
+
+/* Hierarquia tipográfica — Inter Tight pesado pra display */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.94;
+  text-wrap: balance;
+}
+
+h2 { font-weight: 800; letter-spacing: -0.035em; line-height: 1.02; }
+h3 { font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+h4, h5, h6 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+
+p { text-wrap: pretty; line-height: 1.6; }
+
+/* WCAG 2.4.7 — focus ring custom, contraste forte */
+:focus-visible {
+  outline: 2px solid var(--pencil-darkest);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+  transition: outline-offset var(--duration-fast) var(--ease-out-quart);
+}
+
+/* prefers-reduced-motion — desliga animações de desenho */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* View Transitions — swap de tema/route sem flicker */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-out-quart);
+}
+
+/* ============================================================================
+   Display monumental — Inter Tight 900, escala 120, leading 0.94
+   Usado em manifesto H1 e case hero.
+   ============================================================================ */
+
+.display-monumental {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  /* P0.2 — reduzido pra liberar CTA primário no fold em laptop standard.
+     Limites: 44px mobile → 92px desktop. */
+  font-size: clamp(2.75rem, 7.5vw, 5.75rem);
+  letter-spacing: -0.04em;
+  line-height: 0.96;
+  text-wrap: balance;
+}
+
+.display-case-hero {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: clamp(2.25rem, 6vw, 4rem);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+/* ============================================================================
+   Hand — Architects Daughter, exclusivo de anotações
+   ============================================================================ */
+
+.hand {
+  font-family: var(--font-hand);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+/* ============================================================================
+   Mono — JetBrains pra dimension lines, timecodes, specs
+   ============================================================================ */
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.04em;
+}
+
+.mono-upper {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  /* P2.1 — subido de 10px pra 11px (legibilidade de label sem tirar carater técnico) */
+  font-size: 11px;
+}
+
+/* CTA principal — anatomia compartilhada entre Home e cases */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 48px;
+  padding: 0 1.25rem;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--pencil-darkest);
+  font-weight: 500;
+  border-radius: 2px;
+  transition:
+    background-color var(--duration-fast) var(--ease-out-quart),
+    border-color var(--duration-fast) var(--ease-out-quart),
+    color var(--duration-fast) var(--ease-out-quart);
+}
+.btn-primary:hover {
+  background: var(--paper-2);
+  border-color: var(--pencil-darkest);
+}
+.btn-primary .btn-arrow {
+  font-family: var(--font-mono);
+  color: var(--pencil-mid);
+  transition: transform var(--duration-base) var(--ease-out-quart),
+    color var(--duration-fast) var(--ease-out-quart);
+}
+.btn-primary:hover .btn-arrow {
+  transform: translateX(4px);
+  color: var(--pencil-darkest);
+}
