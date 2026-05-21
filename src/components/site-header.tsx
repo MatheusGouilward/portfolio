@@ -14,7 +14,7 @@ export function SiteHeader() {
           href="/"
           className="mono-upper text-[var(--pencil-darkest)] transition-opacity hover:opacity-70"
           style={{ fontSize: '12px', letterSpacing: '0.18em' }}
-          aria-label="Matt Goulart — home"
+          aria-label={`${site.shortName} · Matt Goulart, home`}
         >
           {site.shortName}
         </Link>

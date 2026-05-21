@@ -7,7 +7,6 @@ export function ThoughtListItem({ thought }: { thought: Thought }) {
     <li>
       <Link
         href={`/thoughts/${thought.slug}`}
-        aria-label={`Ler: ${thought.title}, publicado em ${formatDate(thought.publishedAt)}`}
         className="group block border-t border-[var(--line)] py-6 outline-none transition-colors"
       >
         <div className="grid items-baseline gap-y-2 sm:grid-cols-[120px_1fr_auto] sm:gap-x-8">

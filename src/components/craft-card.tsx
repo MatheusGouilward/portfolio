@@ -6,7 +6,6 @@ export function CraftCard({ craft }: { craft: Craft }) {
   return (
     <Link
       href={`/craft/${craft.slug}`}
-      aria-label={`Abrir craft: ${craft.title}, ${formatDate(craft.publishedAt)}`}
       className="group block border-t border-[var(--line)] py-6 outline-none transition-colors sm:py-8"
     >
       <div className="grid items-baseline gap-y-2 sm:grid-cols-[80px_120px_1fr_auto] sm:gap-x-8">

@@ -129,13 +129,21 @@ export const palettes: Record<PaletteKey, PaletteEntry> = {
 export const DEFAULT_PALETTE: PaletteKey = 'cream-graphite'
 export const STORAGE_KEY = 'mg-palette'
 
+function tokensToCssText(tokens: PaletteTokens): string {
+  let css = ''
+  for (const [token, value] of Object.entries(tokens)) {
+    css += `--${token}:${value};`
+  }
+  return css
+}
+
 export function applyPaletteToRoot(key: PaletteKey) {
   const entry = palettes[key]
   if (!entry) return
   const root = document.documentElement
-  for (const [token, value] of Object.entries(entry.tokens)) {
-    root.style.setProperty(`--${token}`, value)
-  }
+  // Usa cssText pra batchar todas as vars numa única operação de style.
+  // Evita N forced reflows que setProperty individual pode causar.
+  root.style.cssText = tokensToCssText(entry.tokens)
   root.setAttribute('data-palette', key)
 }
 
@@ -144,10 +152,18 @@ export function applyPaletteToRoot(key: PaletteKey) {
  * pra evitar flash de cor durante a hidratação. Injetado inline no `<head>`.
  *
  * Re-serializa as paletas como JSON pra o script ser self-contained no client
- * (não precisa importar nada do bundle).
+ * (não precisa importar nada do bundle). Usa `style.cssText` em batch pra
+ * evitar reflow forçado de múltiplos `setProperty`.
  */
 export const PALETTE_INIT_SCRIPT = `(function(){try{var k=localStorage.getItem(${JSON.stringify(
   STORAGE_KEY,
 )})||${JSON.stringify(DEFAULT_PALETTE)};var p=${JSON.stringify(
-  Object.fromEntries(Object.entries(palettes).map(([k, v]) => [k, v.tokens])),
-)};var t=p[k];if(!t)return;var r=document.documentElement;for(var n in t){r.style.setProperty('--'+n,t[n]);}r.setAttribute('data-palette',k);}catch(e){}})();`
+  Object.fromEntries(
+    Object.entries(palettes).map(([k, v]) => [
+      k,
+      Object.entries(v.tokens)
+        .map(([t, val]) => `--${t}:${val}`)
+        .join(';'),
+    ]),
+  ),
+)};var s=p[k];if(!s)return;var r=document.documentElement;r.style.cssText=s;r.setAttribute('data-palette',k);}catch(e){}})();`

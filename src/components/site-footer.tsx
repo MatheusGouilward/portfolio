@@ -46,7 +46,7 @@ export function SiteFooter() {
         >
           {site.colophon}
         </p>
-        <div className="mono-upper mt-4 text-[var(--pencil-light)]">
+        <div className="mono-upper mt-4 text-[var(--pencil-mid)]">
           © {new Date().getFullYear()} · Next 15 · Inter Tight + Architects Daughter + JetBrains Mono
         </div>
       </div>

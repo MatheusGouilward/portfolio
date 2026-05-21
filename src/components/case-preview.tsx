@@ -5,7 +5,6 @@ export function CasePreview({ work }: { work: Work }) {
   return (
     <Link
       href={`/work/${work.slug}`}
-      aria-label={`Abrir case: ${work.company}, ${work.period}`}
       className="group relative isolate block overflow-hidden border-t border-[var(--line)] py-10 outline-none transition-colors sm:py-14"
     >
       <div

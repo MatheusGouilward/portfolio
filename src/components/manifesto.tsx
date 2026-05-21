@@ -78,11 +78,14 @@ export function Manifesto() {
             <motion.span
               key={`${word}-${i}`}
               aria-hidden
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
+              // Todas palavras começam visíveis (opacity 1) e animam só o y.
+              // Necessário pra LCP — qualquer palavra com opacity 0 inicial
+              // vira o LCP element e bloqueia o paint. Stagger de 40ms via y.
+              initial={{ y: 14 }}
+              animate={{ y: 0 }}
               transition={{
                 duration: 0.7,
-                delay: 0.95 + i * 0.04,
+                delay: 0.05 + i * 0.04,
                 ease: [0.16, 1, 0.3, 1],
               }}
               className="inline-block whitespace-pre"
