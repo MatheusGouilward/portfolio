@@ -152,12 +152,20 @@ export default function AboutPage() {
           <HickGesture />
         </div>
 
-        <div className="mt-12">
+        <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3">
           <a href="/cv-matheus-goulart.pdf" download className="btn-primary">
             <span aria-hidden className="btn-arrow">
               ↓
             </span>
             <span>CV em PDF</span>
+          </a>
+          <a
+            href={site.social.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mono-upper text-[var(--pencil-mid)] transition-colors hover:text-[var(--pencil-darkest)]"
+          >
+            Código deste site no GitHub →
           </a>
         </div>
       </section>

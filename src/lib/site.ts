@@ -28,8 +28,7 @@ export const site = {
 
   // Social handles — só declarar os que realmente usa.
   social: {
-    twitter: '',
-    github: '',
+    github: 'https://github.com/MatheusGouilward/portfolio',
     linkedin: 'https://www.linkedin.com/in/matheusgouilward',
     email: 'hello@mattgoulart.com',
   },
