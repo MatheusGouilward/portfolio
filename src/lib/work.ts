@@ -34,6 +34,8 @@ export type Work = {
   hue: string
   /** short tagline used in listings + meta */
   tagline: string
+  /** 1-line proof shown on the home (CaseEditorial dialect) */
+  homeHighlight?: string
   opening: string[]
   layers: WorkLayer[]
   metrics: WorkMetric[]
@@ -55,7 +57,9 @@ export const works: Work[] = [
     period: 'Jul 2022 — Fev 2026',
     hue: '32 100% 58%', // âmbar-laranja, ligado ao tema educacional + accent
     tagline:
-      'Quatro anos construindo o produto pedagógico que mudou a sala de aula de muita gente.',
+      'Quatro anos no produto pedagógico que mudou a sala de aula. CSAT 30 → 90.',
+    homeHighlight:
+      'CSAT 30 → 90 · 78% engajamento nos Copilots · Design System do zero.',
     opening: [
       // Será reescrito ao implementar — placeholder mantém estrutura
       'Cheguei na Jovens Gênios em julho de 2022. A empresa fazia EdTech B2B pra escolas e tinha um produto que crescia mais rápido do que o time conseguia desenhar.',
@@ -102,6 +106,8 @@ export const works: Work[] = [
     hue: '210 100% 60%', // azul frio, contraste com JG
     tagline:
       'Redesenhei o CRM B2B que marcas como L’Occitane, Grand Cru e Ortobom usam pra rodar marketing de propensão por IA.',
+    homeHighlight:
+      'CRM B2B com IA de propensão pra L’Occitane, Grand Cru e Ortobom. Design System do zero + dashboards multicanal.',
     opening: [
       'Sellbie é CRM B2B com marketing automation multicanal — Email, WhatsApp, SMS — e IA de propensão de compra. Entrei pra liderar o redesign do produto e construir o Design System.',
       'Em nove meses redesenhei fluxos core, montei dashboards multicanal com drill-down por canal, e desenhei o copiloto que ajuda usuários a entender segmentação de propensão alta/média/baixa.',

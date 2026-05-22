@@ -3,9 +3,10 @@ import { site } from '@/lib/site'
 import { Manifesto } from '@/components/manifesto'
 import { StatusRow } from '@/components/status-row'
 import { CraftCard } from '@/components/craft-card'
-import { CasePreview } from '@/components/case-preview'
+import { CaseEditorial } from '@/components/case-editorial'
 import { ThoughtListItem } from '@/components/thought-list-item'
 import { HandNote } from '@/components/hand-note'
+import { Trajectory } from '@/components/trajectory'
 import { getLatestCrafts } from '@/lib/crafts'
 import { getRecentThoughts } from '@/lib/thoughts'
 import { getPublishedWorks } from '@/lib/work'
@@ -65,24 +66,23 @@ export default function HomePage() {
       <section aria-labelledby="cases" className="relative mt-40 sm:mt-56">
         <SectionHeading id="cases" label="Cases selecionados" link="/work" linkLabel="ver todos" />
 
-        <div className="relative mt-4">
-          {works.map((w) => (
-            <CasePreview key={w.slug} work={w} />
+        <div className="relative mt-12">
+          {works.map((w, i) => (
+            <CaseEditorial key={w.slug} work={w} number={i + 1} />
           ))}
 
           {/* Regra: rotação negativa → lado esquerdo do conteúdo, 80px de gap.
-              Manifesto usa 40px (exceção); listas (cases/crafts) usam 80px
-              porque a coluna de conteúdo é mais densa e precisa de respiro. */}
+              Anotação não repete a tagline — comenta a relação entre os dois cases. */}
           <div
             aria-hidden
             className="pointer-events-none absolute hidden xl:block"
             style={{
-              top: '64px',
+              top: '80px',
               right: 'calc(100% + 80px)',
             }}
           >
             <HandNote
-              note={'quatro anos aqui\nmudaram tudo.'}
+              note={'esse define\no resto.'}
               rotation={-8}
               origin="right top"
               align="right"
@@ -132,36 +132,18 @@ export default function HomePage() {
       </section>
 
       <section aria-labelledby="trajetoria" className="relative mt-32 sm:mt-40">
-        <SectionHeading id="trajetoria" label="Trajetória" />
+        <Trajectory />
 
-        <p className="mt-8 max-w-3xl text-[clamp(1.25rem,2.4vw,1.75rem)] font-medium leading-[1.4] text-[var(--pencil-darkest)]">
-          Senior Product Designer com 6+ anos em B2B SaaS. Passei quatro anos na{' '}
-          <Link
-            href="/work/jovens-genios"
-            className="underline decoration-[var(--pencil)] decoration-2 underline-offset-[6px] transition-colors hover:text-[var(--pencil-dark)]"
-          >
-            Jovens Gênios
-          </Link>{' '}
-          construindo uma EdTech que escalou nacionalmente — Design System do zero, AI Copilots
-          pedagógicos, dashboards de aprendizagem. Em paralelo redesenhei o{' '}
-          <Link
-            href="/work/sellbie"
-            className="underline decoration-[var(--pencil)] decoration-2 underline-offset-[6px] transition-colors hover:text-[var(--pencil-dark)]"
-          >
-            Sellbie
-          </Link>
-          , CRM B2B com IA de propensão que atende marcas como L’Occitane, Grand Cru e Ortobom.
-        </p>
-        <p className="mt-6 max-w-3xl text-base text-[var(--pencil-mid)] sm:text-[17px]">
-          Trabalho na interseção entre design, sistemas e código, usando IA como ferramenta diária.{' '}
+        {/* Link pro /about — leitura mais profunda da trajetória. */}
+        <div className="mt-10">
           <Link
             href="/about"
-            className="text-[var(--pencil-darkest)] underline underline-offset-4 hover:text-[var(--pencil-dark)]"
+            className="mono-upper text-[var(--pencil-mid)] transition-colors hover:text-[var(--pencil-darkest)]"
+            style={{ fontSize: '11px' }}
           >
-            Mais em /sobre
+            História completa em /sobre →
           </Link>
-          .
-        </p>
+        </div>
       </section>
     </div>
   )
