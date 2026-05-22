@@ -57,7 +57,7 @@ export const works: Work[] = [
     period: 'Jul 2022 — Fev 2026',
     hue: '32 100% 58%', // âmbar-laranja, ligado ao tema educacional + accent
     tagline:
-      'Quatro anos no produto pedagógico que mudou a sala de aula. CSAT 30 → 90.',
+      'Quatro anos no produto pedagógico que mudou a sala de aula.',
     homeHighlight:
       'CSAT 30 → 90 · 78% engajamento nos Copilots · Design System do zero.',
     opening: [
