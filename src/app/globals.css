@@ -129,6 +129,30 @@ html {
   color: var(--pencil-darkest);
 }
 
+/* Lenis smooth scroll — overrides nativos enquanto Lenis está ativo.
+   Quando prefers-reduced-motion, ScrollProvider não instala o Lenis
+   e estas classes nunca aparecem — scroll volta a ser nativo. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 body {
   font-family: var(--font-sans);
   font-feature-settings: var(--font-feature-sans);

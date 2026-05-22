@@ -9,6 +9,7 @@ import {
 } from '@/components/blueprint-provider'
 import { BlueprintToggle } from '@/components/blueprint-toggle'
 import { BackToTop } from '@/components/back-to-top'
+import { ScrollProvider } from '@/components/scroll-provider'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { cn } from '@/lib/utils'
@@ -71,6 +72,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               Pular para o conteúdo principal
             </a>
+
+            {/* Smooth scroll global (Lenis) + bridge pro GSAP ScrollTrigger.
+                Lazy load via dynamic import; respeita prefers-reduced-motion. */}
+            <ScrollProvider />
 
             {/* BlueprintToggle no início do DOM pra Tab order priorizar a tese. */}
             <BlueprintToggle />
