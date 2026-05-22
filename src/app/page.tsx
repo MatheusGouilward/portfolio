@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { site } from '@/lib/site'
 import { Manifesto } from '@/components/manifesto'
 import { StatusRow } from '@/components/status-row'
-import { CraftCard } from '@/components/craft-card'
+import { CraftRow } from '@/components/craft-row'
 import { CaseEditorial } from '@/components/case-editorial'
 import { ThoughtListItem } from '@/components/thought-list-item'
 import { HandNote } from '@/components/hand-note'
@@ -95,13 +95,16 @@ export default function HomePage() {
       <section aria-labelledby="craft" className="relative mt-32 sm:mt-40">
         <SectionHeading id="craft" label="Experimentos recentes" link="/craft" linkLabel="ver todos" />
 
-        <div className="relative mt-4">
-          {crafts.map((c) => (
-            <CraftCard key={c.id} craft={c} />
-          ))}
+        <div className="relative">
+          <ol className="mt-8 border-t border-[var(--line)]" role="list">
+            {crafts.map((c) => (
+              <li key={c.id} role="listitem">
+                <CraftRow craft={c} />
+              </li>
+            ))}
+          </ol>
 
-          {/* Regra: rotação positiva → lado direito do conteúdo, 80px de gap.
-              Manifesto é exceção com 40px. */}
+          {/* Rotação positiva → lado direito do conteúdo, 80px de gap. */}
           <div
             aria-hidden
             className="pointer-events-none absolute hidden xl:block"
@@ -111,8 +114,8 @@ export default function HomePage() {
             }}
           >
             <HandNote
-              note={'esse aqui \nnão é screenshot.'}
-              rotation={6}
+              note={'cada um veio\nde uma dúvida minha.'}
+              rotation={9}
               origin="left top"
               align="left"
               fontSize="16px"
