@@ -4,7 +4,7 @@ import { Manifesto } from '@/components/manifesto'
 import { StatusRow } from '@/components/status-row'
 import { CraftRow } from '@/components/craft-row'
 import { CaseEditorial } from '@/components/case-editorial'
-import { ThoughtListItem } from '@/components/thought-list-item'
+import { ThoughtsEditorial } from '@/components/thoughts-editorial'
 import { HandNote } from '@/components/hand-note'
 import { Trajectory } from '@/components/trajectory'
 import { getLatestCrafts } from '@/lib/crafts'
@@ -127,11 +127,7 @@ export default function HomePage() {
       <section aria-labelledby="thoughts" className="relative mt-32 sm:mt-40">
         <SectionHeading id="thoughts" label="Notas recentes" link="/thoughts" linkLabel="ver todos" />
 
-        <ul className="mt-4">
-          {thoughts.map((t) => (
-            <ThoughtListItem key={t.slug} thought={t} />
-          ))}
-        </ul>
+        <ThoughtsEditorial thoughts={thoughts} className="mt-10" />
       </section>
 
       <section aria-labelledby="trajetoria" className="relative mt-32 sm:mt-40">
