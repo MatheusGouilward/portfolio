@@ -217,6 +217,17 @@ p { text-wrap: pretty; line-height: 1.6; }
   }
 }
 
+/* Blink cursor — usado no terminal log da seção Experimentos da home (§22.1).
+   prefers-reduced-motion já cobre via override global de animation-duration. */
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.animate-blink {
+  animation: blink 1.2s steps(1) infinite;
+}
+
 /* View Transitions — swap de tema/route sem flicker */
 ::view-transition-old(root),
 ::view-transition-new(root) {

@@ -93,16 +93,38 @@ export default function HomePage() {
       </section>
 
       <section aria-labelledby="craft" className="relative mt-32 sm:mt-40">
-        <SectionHeading id="craft" label="Experimentos recentes" link="/craft" linkLabel="ver todos" />
+        <h2 id="craft" className="sr-only">
+          Experimentos recentes
+        </h2>
+
+        {/* Header da seção É um prompt — terminal real, não label decorativa */}
+        <header className="flex items-baseline justify-between font-mono text-[13px] text-[var(--pencil-mid)]">
+          <span>
+            <span aria-hidden>$ </span>
+            git log --oneline mattgoulart/portfolio
+          </span>
+          <Link
+            href="/craft"
+            className="text-[var(--pencil-mid)] transition-colors hover:text-[var(--pencil-darkest)]"
+          >
+            --all →
+          </Link>
+        </header>
 
         <div className="relative">
-          <ol className="mt-8 border-t border-[var(--line)]" role="list">
-            {crafts.map((c) => (
-              <li key={c.id} role="listitem">
-                <CraftRow craft={c} />
-              </li>
+          <ol className="mt-6 font-mono" role="list">
+            {crafts.map((c, i) => (
+              <CraftRow key={c.id} craft={c} index={i} />
             ))}
           </ol>
+
+          {/* Cursor piscando após a última row — fim do prompt */}
+          <span
+            aria-hidden
+            className="animate-blink mt-2 inline-block font-mono text-[16px] leading-none text-[var(--pencil-darkest)]"
+          >
+            █
+          </span>
 
           {/* Rotação positiva → lado direito do conteúdo, 80px de gap. */}
           <div
@@ -114,8 +136,8 @@ export default function HomePage() {
             }}
           >
             <HandNote
-              note={'cada um veio\nde uma dúvida minha.'}
-              rotation={9}
+              note={'esse log\né meu rascunho ao vivo.'}
+              rotation={10}
               origin="left top"
               align="left"
               fontSize="16px"
