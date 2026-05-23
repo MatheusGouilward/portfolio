@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useMotionValue, useSpring, useReducedMotion } from 'motion/react'
 import type { Work } from '@/lib/work'
 
@@ -31,6 +31,15 @@ export function CaseEditorial({ work, number }: { work: Work; number: number }) 
   const reduced = useReducedMotion() ?? false
   const articleRef = useRef<HTMLElement>(null)
   const [hovering, setHovering] = useState(false)
+  // Detecta capacidade de hover real (pointer fino, não touch). Touch devices
+  // disparam `mousemove` sintético em drag — sem este guard, o mouse follow
+  // ink aparecia no celular ao tocar e arrastar no card.
+  const [hasHover, setHasHover] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setHasHover(window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+  }, [])
 
   // Mouse follow ink — usa motion values + spring pra movimento suave
   const inkX = useMotionValue(0)
@@ -44,16 +53,17 @@ export function CaseEditorial({ work, number }: { work: Work; number: number }) 
     inkY.set(e.clientY - rect.top)
   }
 
-  const showFollowInk = !reduced && hovering
+  const inkEnabled = hasHover && !reduced
+  const showFollowInk = inkEnabled && hovering
   const numberPadded = String(number).padStart(2, '0')
   const metrics = work.metrics?.slice(0, 3) ?? []
 
   return (
     <article
       ref={articleRef}
-      onMouseMove={reduced ? undefined : handleMouseMove}
-      onMouseEnter={reduced ? undefined : () => setHovering(true)}
-      onMouseLeave={reduced ? undefined : () => setHovering(false)}
+      onMouseMove={inkEnabled ? handleMouseMove : undefined}
+      onMouseEnter={inkEnabled ? () => setHovering(true) : undefined}
+      onMouseLeave={inkEnabled ? () => setHovering(false) : undefined}
       className="group relative overflow-hidden border-t border-[var(--pencil-darkest)] py-20 sm:py-28"
     >
       {/* Fallback hover ink (sem mouse follow) — funciona em reduced-motion E
