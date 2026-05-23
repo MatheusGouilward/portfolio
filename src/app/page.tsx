@@ -6,6 +6,7 @@ import { CraftRow } from '@/components/craft-row'
 import { CaseEditorial } from '@/components/case-editorial'
 import { ThoughtsEditorial } from '@/components/thoughts-editorial'
 import { HandNote } from '@/components/hand-note'
+import { SpecCTA } from '@/components/spec-cta'
 import { Trajectory } from '@/components/trajectory'
 import { getLatestCrafts } from '@/lib/crafts'
 import { getRecentThoughts } from '@/lib/thoughts'
@@ -49,10 +50,9 @@ export default function HomePage() {
         </div>
 
         <div className="mt-14 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <Link href="/work" className="btn-primary shrink-0">
-            <span>Ver cases</span>
-            <span aria-hidden className="btn-arrow">→</span>
-          </Link>
+          <SpecCTA href="/work" suffix="→" className="shrink-0">
+            Ver cases
+          </SpecCTA>
           <Link
             href="/about"
             className="mono-upper text-[var(--pencil-mid)] transition-colors hover:text-[var(--pencil-darkest)]"

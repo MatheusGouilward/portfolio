@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { site } from '@/lib/site'
 import { HandNote } from '@/components/hand-note'
 import { HickGesture } from '@/components/hick-gesture'
+import { SpecCTA } from '@/components/spec-cta'
 
 export const metadata = {
   title: 'About',
@@ -153,12 +154,9 @@ export default function AboutPage() {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <a href="/cv-matheus-goulart.pdf" download className="btn-primary">
-            <span aria-hidden className="btn-arrow">
-              ↓
-            </span>
-            <span>CV em PDF</span>
-          </a>
+          <SpecCTA href="/cv-matheus-goulart.pdf" download prefix="↓">
+            CV em PDF
+          </SpecCTA>
           <a
             href={site.social.github}
             target="_blank"

@@ -288,34 +288,5 @@ p { text-wrap: pretty; line-height: 1.6; }
   font-size: 11px;
 }
 
-/* CTA principal — anatomia compartilhada entre Home e cases */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  height: 48px;
-  padding: 0 1.25rem;
-  border: 1px solid var(--line-strong);
-  background: var(--paper);
-  color: var(--pencil-darkest);
-  font-weight: 500;
-  border-radius: 2px;
-  transition:
-    background-color var(--duration-fast) var(--ease-out-quart),
-    border-color var(--duration-fast) var(--ease-out-quart),
-    color var(--duration-fast) var(--ease-out-quart);
-}
-.btn-primary:hover {
-  background: var(--paper-2);
-  border-color: var(--pencil-darkest);
-}
-.btn-primary .btn-arrow {
-  font-family: var(--font-mono);
-  color: var(--pencil-mid);
-  transition: transform var(--duration-base) var(--ease-out-quart),
-    color var(--duration-fast) var(--ease-out-quart);
-}
-.btn-primary:hover .btn-arrow {
-  transform: translateX(4px);
-  color: var(--pencil-darkest);
-}
+/* CTA principal migrado pra <SpecCTA> em 23/05 (TASKS §22.8).
+   .btn-primary removida — não há mais uso no projeto. */
