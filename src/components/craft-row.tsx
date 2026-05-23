@@ -74,35 +74,51 @@ export function CraftRow({ craft, index }: { craft: Craft; index: number }) {
         href={`/craft/${craft.slug}`}
         className="block py-2 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-quart)] hover:bg-[var(--paper-2)]"
       >
-        {/* Linha 1: hash · feat: título · data */}
-        <div className="grid grid-cols-[80px_1fr_auto] gap-x-4 text-[13px]">
+        {/* Mobile (<md): hash + data + wip numa linha de meta no topo */}
+        <div className="flex items-baseline gap-3 text-[13px] md:hidden">
           <span className="font-mono text-[var(--pencil-mid)]">{hash}</span>
-          <span className="truncate">
-            <span className="font-mono text-[var(--pencil-mid)]">feat: </span>
-            <span className="text-[18px] font-medium leading-none text-[var(--pencil-darkest)]">
-              {craft.title}
-            </span>
-          </span>
           <time
             dateTime={craft.publishedAt}
             className="font-mono text-[var(--pencil-mid)] tabular-nums"
           >
             {formatDateShort(craft.publishedAt)}
           </time>
-        </div>
-
-        {/* Linha 2: tags em [brackets] + (opcional) [wip] alinhado à direita */}
-        <div className="grid grid-cols-[80px_1fr_auto] gap-x-4 pt-1">
-          <span aria-hidden />
-          <span className="font-mono text-[12px] text-[var(--pencil-light)]">
-            {craft.tags.map((t) => `[${t}]`).join(' ')}
-          </span>
           {isWip ? (
             <span className="font-mono text-[12px] uppercase text-[var(--pencil-darkest)]">
               [wip]
             </span>
+          ) : null}
+        </div>
+
+        {/* Linha principal: hash (md+) · feat: título · data (md+) */}
+        <div className="mt-1 grid grid-cols-1 gap-y-0 text-[13px] md:mt-0 md:grid-cols-[80px_1fr_auto] md:items-baseline md:gap-x-4">
+          <span className="hidden font-mono text-[var(--pencil-mid)] md:inline">{hash}</span>
+          <span className="md:truncate">
+            <span className="font-mono text-[var(--pencil-mid)]">feat: </span>
+            <span className="text-[18px] font-medium leading-snug text-[var(--pencil-darkest)]">
+              {craft.title}
+            </span>
+          </span>
+          <time
+            dateTime={craft.publishedAt}
+            className="hidden font-mono text-[var(--pencil-mid)] tabular-nums md:inline"
+          >
+            {formatDateShort(craft.publishedAt)}
+          </time>
+        </div>
+
+        {/* Linha de tags: em mobile flex wrap; em md+ grid com [wip] à direita */}
+        <div className="mt-1 grid grid-cols-1 md:grid-cols-[80px_1fr_auto] md:gap-x-4">
+          <span aria-hidden className="hidden md:block" />
+          <span className="font-mono text-[12px] text-[var(--pencil-light)]">
+            {craft.tags.map((t) => `[${t}]`).join(' ')}
+          </span>
+          {isWip ? (
+            <span className="hidden font-mono text-[12px] uppercase text-[var(--pencil-darkest)] md:inline">
+              [wip]
+            </span>
           ) : (
-            <span aria-hidden />
+            <span aria-hidden className="hidden md:block" />
           )}
         </div>
       </Link>
