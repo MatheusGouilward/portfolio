@@ -55,7 +55,7 @@ export default function HomePage() {
           </SpecCTA>
           <Link
             href="/about"
-            className="mono-upper text-[var(--pencil-mid)] transition-colors hover:text-[var(--pencil-darkest)]"
+            className="mono-upper inline-flex min-h-11 items-center text-[var(--pencil-mid)] transition-colors hover:text-[var(--pencil-darkest)]"
             style={{ fontSize: '11px' }}
           >
             Como cheguei aqui →
