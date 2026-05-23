@@ -37,7 +37,11 @@ export function BlueprintToggle() {
         aria-pressed={on}
         aria-label={on ? 'Desligar anotações UX (blueprint mode)' : 'Ligar anotações UX (blueprint mode)'}
         className={cn(
-          'pointer-events-auto inline-flex h-11 min-w-[140px] items-center gap-2 px-3',
+          'pointer-events-auto inline-flex h-11 items-center',
+          // Mobile: ícone-only quadrado (44x44 — touch target), sem label visível.
+          // sm+: width auto + label "blueprint: on/off".
+          'w-11 justify-center px-0',
+          'sm:w-auto sm:min-w-[140px] sm:justify-start sm:gap-2 sm:px-3',
           'border border-[var(--line-strong)]',
           'text-[var(--pencil-darkest)]',
           'transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out-quart)]',
@@ -49,7 +53,10 @@ export function BlueprintToggle() {
         }}
       >
         <BracketGlyph active={on} />
-        <span className="mono-upper" style={{ fontSize: '11px', fontWeight: 600 }}>
+        <span
+          className="mono-upper hidden sm:inline"
+          style={{ fontSize: '11px', fontWeight: 600 }}
+        >
           blueprint:&nbsp;{on ? 'on' : 'off'}
         </span>
       </button>
