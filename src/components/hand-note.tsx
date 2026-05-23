@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'motion/react'
-import { Fragment, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { useBlueprint } from './blueprint-provider'
 
@@ -10,7 +10,7 @@ type HandNoteProps = {
   note: string
   /** Inclinação em graus. Default -3. */
   rotation?: number
-  /** Delay da entrada (segundos). */
+  /** Delay da entrada (segundos) — ignorado quando scrub=true. */
   delay?: number
   /** Origem do transform — onde a rotação "ancora". */
   origin?: 'left top' | 'right top' | 'left bottom' | 'right bottom' | 'center'
@@ -22,6 +22,13 @@ type HandNoteProps = {
   align?: 'left' | 'right' | 'center'
   /** Força 1 linha (white-space: nowrap + width: max-content). */
   noWrap?: boolean
+  /**
+   * Modo scroll-scrub: opacity + y atrelados ao progress da seção pai.
+   * Reverte se rolar pra cima. Quando false (default), usa Motion whileInView
+   * once:true. prefers-reduced-motion ignora scrub e renderiza estado final.
+   * Spec §22.4 do TASKS.md.
+   */
+  scrub?: boolean
   className?: string
 }
 
@@ -41,6 +48,7 @@ export function HandNote({
   maxWidth = 220,
   align = 'right',
   noWrap = false,
+  scrub = false,
   className,
 }: HandNoteProps) {
   const { on } = useBlueprint()
@@ -75,13 +83,7 @@ export function HandNote({
         }
 
   const isInlineBlock = noWrap || hasExplicitBreaks
-  const baseClassName = cn(
-    'hand text-[var(--pencil)]',
-    isInlineBlock ? 'inline-block' : 'block',
-    'transition-opacity duration-[var(--duration-base)] ease-[var(--ease-out-quart)]',
-    on ? 'opacity-100' : 'opacity-0',
-    className,
-  )
+  const inlineBlockClass = isInlineBlock ? 'inline-block' : 'block'
 
   const content: ReactNode = lines
     ? lines.map((line, i) => (
@@ -91,6 +93,33 @@ export function HandNote({
         </Fragment>
       ))
     : note
+
+  // BRANCH 1 — scrub mode (GSAP ScrollTrigger)
+  if (scrub && !reduced) {
+    return (
+      <HandNoteScrub
+        rotation={rotation}
+        baseStyle={baseStyle}
+        baseClassName={cn(
+          'hand text-[var(--pencil)]',
+          inlineBlockClass,
+          className,
+        )}
+        on={on}
+      >
+        {content}
+      </HandNoteScrub>
+    )
+  }
+
+  // BRANCH 2 — reduced motion (estado final imediato, sem animação)
+  const baseClassName = cn(
+    'hand text-[var(--pencil)]',
+    inlineBlockClass,
+    'transition-opacity duration-[var(--duration-base)] ease-[var(--ease-out-quart)]',
+    on ? 'opacity-100' : 'opacity-0',
+    className,
+  )
 
   if (reduced) {
     return (
@@ -104,6 +133,7 @@ export function HandNote({
     )
   }
 
+  // BRANCH 3 — default (Motion whileInView once:true)
   return (
     <motion.span
       aria-hidden={!on}
@@ -116,5 +146,86 @@ export function HandNote({
     >
       {content}
     </motion.span>
+  )
+}
+
+/**
+ * Scrub variant — GSAP ScrollTrigger atrela opacity + y ao progress da
+ * section pai (closest('section') ou parentElement). Reverte se rolar pra cima.
+ *
+ * Blueprint toggle aqui controla `visibility` (snap) em vez de opacity, pra
+ * não brigar com o GSAP que está animando opacity.
+ */
+function HandNoteScrub({
+  rotation,
+  baseStyle,
+  baseClassName,
+  on,
+  children,
+}: {
+  rotation: number
+  baseStyle: CSSProperties
+  baseClassName: string
+  on: boolean
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const el = ref.current
+    if (!el) return
+    const trigger = el.closest('section') ?? el.parentElement
+    if (!trigger) return
+
+    let cancelled = false
+    let killAll: (() => void) | null = null
+
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+      ([{ gsap }, { ScrollTrigger }]) => {
+        if (cancelled || !el) return
+        gsap.registerPlugin(ScrollTrigger)
+
+        gsap.set(el, { opacity: 0, y: 12 })
+
+        const tween = gsap.to(el, {
+          opacity: 1,
+          y: 0,
+          ease: 'none',
+          scrollTrigger: {
+            trigger,
+            start: 'top 85%',
+            end: 'top 40%',
+            scrub: true,
+          },
+        })
+
+        killAll = () => {
+          tween.scrollTrigger?.kill()
+          tween.kill()
+          gsap.set(el, { clearProps: 'opacity,y' })
+        }
+      },
+    )
+
+    return () => {
+      cancelled = true
+      killAll?.()
+    }
+  }, [])
+
+  return (
+    <span
+      ref={ref}
+      aria-hidden={!on}
+      className={baseClassName}
+      style={{
+        ...baseStyle,
+        transform: `rotate(${rotation}deg)`,
+        visibility: on ? 'visible' : 'hidden',
+      }}
+    >
+      {children}
+    </span>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'motion/react'
+import { useEffect, useRef } from 'react'
 import { site } from '@/lib/site'
 import { useBlueprint } from './blueprint-provider'
 
@@ -11,12 +12,61 @@ export function Manifesto() {
   const { on } = useBlueprint()
   const words = site.manifesto.split(' ')
   const { previous } = site.manifestoMeta
+  const heroRef = useRef<HTMLDivElement>(null)
+  const riscadaRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * Parallax assimétrico — a riscada se desloca y: -40px conforme scroll,
+   * 30% mais devagar que o display monumental (scrub 0.5).
+   * Trigger: closest('section') do heroRef pra pegar a altura total do hero.
+   * Spec §22.4 Experimento B.
+   */
+  useEffect(() => {
+    if (reduced) return
+    if (typeof window === 'undefined') return
+    const riscada = riscadaRef.current
+    const hero = heroRef.current?.closest('section') ?? heroRef.current
+    if (!riscada || !hero) return
+
+    let cancelled = false
+    let killAll: (() => void) | null = null
+
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+      ([{ gsap }, { ScrollTrigger }]) => {
+        if (cancelled || !riscada) return
+        gsap.registerPlugin(ScrollTrigger)
+
+        const tween = gsap.to(riscada, {
+          y: -40,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: hero,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.5,
+          },
+        })
+
+        killAll = () => {
+          tween.scrollTrigger?.kill()
+          tween.kill()
+          gsap.set(riscada, { clearProps: 'y' })
+        }
+      },
+    )
+
+    return () => {
+      cancelled = true
+      killAll?.()
+    }
+  }, [reduced])
 
   return (
-    <div>
+    <div ref={heroRef}>
       {/* Rascunho riscado — versão genérica da indústria, rejeitada.
-          Respeita o blueprint toggle. */}
+          Respeita o blueprint toggle. Faz parallax sutil no scroll. */}
       <div
+        ref={riscadaRef}
         aria-hidden={!on}
         className="mb-4 transition-opacity sm:mb-6"
         style={{

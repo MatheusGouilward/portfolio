@@ -87,6 +87,7 @@ export default function HomePage() {
               origin="right top"
               align="right"
               fontSize="16px"
+              scrub
             />
           </div>
         </div>
@@ -141,6 +142,7 @@ export default function HomePage() {
               origin="left top"
               align="left"
               fontSize="16px"
+              scrub
             />
           </div>
         </div>
@@ -167,6 +169,7 @@ export default function HomePage() {
               origin="left top"
               align="left"
               fontSize="16px"
+              scrub
             />
           </div>
         </div>
