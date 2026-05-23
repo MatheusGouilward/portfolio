@@ -149,7 +149,27 @@ export default function HomePage() {
       <section aria-labelledby="thoughts" className="relative mt-32 sm:mt-40">
         <SectionHeading id="thoughts" label="Notas recentes" link="/thoughts" linkLabel="ver todos" />
 
-        <ThoughtsEditorial thoughts={thoughts} className="mt-10" />
+        <div className="relative">
+          <ThoughtsEditorial thoughts={thoughts} className="mt-12" />
+
+          {/* Rotação positiva → lado direito, 80px gap, alinhada ao lead. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute hidden xl:block"
+            style={{
+              top: '1rem',
+              left: 'calc(100% + 80px)',
+            }}
+          >
+            <HandNote
+              note={'alguns ainda\nem rascunho.'}
+              rotation={12}
+              origin="left top"
+              align="left"
+              fontSize="16px"
+            />
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="trajetoria" className="relative mt-32 sm:mt-40">
