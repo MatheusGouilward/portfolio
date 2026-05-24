@@ -12,10 +12,19 @@ import { cn } from '@/lib/utils'
  *
  * Comportamento:
  * - Polaroid inteira arrasta livre e fica onde solta (dragMomentum=false).
- * - Máscara arrasta DENTRO da polaroid e volta com snap magnético pro
- *   centro (dragSnapToOrigin + spring).
+ * - Máscara arrasta DENTRO da polaroid e volta com snap magnético pra
+ *   posição inicial (dragSnapToOrigin + spring).
  * - Mobile (<md) fica oculto pra não confundir touch users.
  * - prefers-reduced-motion: snap da máscara fica instantâneo (spring rígido).
+ *
+ * Cor de fundo:
+ * - Background fixo `#fafafa` (off-white de polaroid real) — NÃO usa
+ *   var(--paper) porque a polaroid precisa contrastar em todas as 4
+ *   paletas, especialmente carvao-giz onde --paper é escuro.
+ *
+ * Máscara:
+ * - Renderizada em tamanho dimensionado (não preenche o photo area).
+ * - Posição e tamanho ajustáveis via props pra encaixar exato no rosto.
  *
  * Acessibilidade:
  * - alt descritivo na foto.
@@ -36,9 +45,18 @@ type PolaroidDraggableProps = {
   signatureAlt?: string
   alt?: string
   initialRotation?: number
+  /** Largura da máscara em px. Default 160. */
+  maskSize?: number
+  /** Offset X da máscara dentro do photo area (top-left). Default centrado. */
+  maskInitialX?: number
+  /** Offset Y da máscara dentro do photo area. Default 60 (terço superior). */
+  maskInitialY?: number
   className?: string
   style?: React.CSSProperties
 }
+
+const PHOTO_WIDTH = 240
+const PHOTO_HEIGHT = 280
 
 export function PolaroidDraggable({
   photoSrc,
@@ -47,11 +65,17 @@ export function PolaroidDraggable({
   signatureAlt = 'assinatura',
   alt = 'foto de Matt Goulart',
   initialRotation = -3,
+  maskSize = 160,
+  maskInitialX,
+  maskInitialY = 60,
   className,
   style,
 }: PolaroidDraggableProps) {
   const photoAreaRef = useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion() ?? false
+
+  // Default: centrar horizontalmente
+  const xPos = maskInitialX ?? Math.round((PHOTO_WIDTH - maskSize) / 2)
 
   return (
     <motion.div
@@ -62,24 +86,30 @@ export function PolaroidDraggable({
       animate={{ rotate: initialRotation }}
       className={cn(
         'cursor-grab touch-none select-none',
-        // Mobile (<md) fica oculto — touch gestures conflitam com scroll
         'hidden md:block',
         className,
       )}
       style={{
-        background: 'var(--paper)',
+        // Off-white fixo — contrasta em todas as paletas (especialmente carvao-giz)
+        background: '#fafafa',
         padding: '14px 14px 56px',
         boxShadow:
-          '0 8px 28px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.10)',
+          '0 12px 36px rgba(0, 0, 0, 0.28), 0 4px 10px rgba(0, 0, 0, 0.14)',
         borderRadius: '2px',
         width: 264,
+        outline: '1px solid rgba(0, 0, 0, 0.06)',
+        outlineOffset: '-1px',
         ...style,
       }}
     >
       <div
         ref={photoAreaRef}
         className="relative overflow-hidden"
-        style={{ width: 240, height: 280, background: 'var(--paper-2)' }}
+        style={{
+          width: PHOTO_WIDTH,
+          height: PHOTO_HEIGHT,
+          background: '#e8e2d3',
+        }}
       >
         <Image
           src={photoSrc}
@@ -92,7 +122,8 @@ export function PolaroidDraggable({
           priority={false}
         />
 
-        {/* Máscara — arrasta dentro da polaroid, snap magnético pro centro */}
+        {/* Máscara — width fixo (não preenche o photo area), arrastável dentro
+            do photo area com snap magnético pra posição inicial. */}
         <motion.img
           src={maskSrc}
           alt=""
@@ -108,7 +139,13 @@ export function PolaroidDraggable({
               : { bounceStiffness: 420, bounceDamping: 18 }
           }
           whileDrag={{ cursor: 'grabbing', scale: 1.04 }}
-          className="absolute inset-0 block h-full w-full cursor-grab object-contain"
+          className="absolute block cursor-grab"
+          style={{
+            top: maskInitialY,
+            left: xPos,
+            width: maskSize,
+            height: 'auto',
+          }}
         />
       </div>
 
