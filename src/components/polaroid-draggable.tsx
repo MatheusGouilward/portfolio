@@ -102,36 +102,39 @@ export function PolaroidDraggable({
         ...style,
       }}
     >
+      {/* Container do photo area — define dimensions sem overflow-hidden no
+          wrapper externo (pra máscara poder vazar livre). */}
       <div
-        ref={photoAreaRef}
-        className="relative overflow-hidden"
-        style={{
-          width: PHOTO_WIDTH,
-          height: PHOTO_HEIGHT,
-          background: '#e8e2d3',
-        }}
+        className="relative"
+        style={{ width: PHOTO_WIDTH, height: PHOTO_HEIGHT }}
       >
-        <Image
-          src={photoSrc}
-          alt={alt}
-          fill
-          sizes="240px"
-          draggable={false}
-          className="object-cover"
-          style={{ pointerEvents: 'none' }}
-          priority={false}
-        />
+        {/* Foto clipada — overflow-hidden só na foto, não na máscara */}
+        <div
+          ref={photoAreaRef}
+          className="absolute inset-0 overflow-hidden"
+          style={{ background: '#e8e2d3' }}
+        >
+          <Image
+            src={photoSrc}
+            alt={alt}
+            fill
+            sizes="240px"
+            draggable={false}
+            className="object-cover"
+            style={{ pointerEvents: 'none' }}
+            priority={false}
+          />
+        </div>
 
-        {/* Máscara — width fixo (não preenche o photo area), arrastável dentro
-            do photo area com snap magnético pra posição inicial. */}
+        {/* Máscara — sibling da foto, FORA do overflow-hidden. Drag livre:
+            sem dragConstraints, sem dragElastic. Solta = volta pro centro
+            com spring (dragSnapToOrigin). */}
         <motion.img
           src={maskSrc}
           alt=""
           aria-hidden
           draggable={false}
           drag
-          dragConstraints={photoAreaRef}
-          dragElastic={0.18}
           dragSnapToOrigin
           dragTransition={
             reduced
