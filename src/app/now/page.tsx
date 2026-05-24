@@ -66,7 +66,7 @@ export default function NowPage() {
           }}
         >
           <HandNote
-            note={'data importa mais\nque pirotecnia.'}
+            note={'atualizo quando muda.\nraramente é semana sim, semana não.'}
             rotation={-7}
             origin="right top"
             align="right"
