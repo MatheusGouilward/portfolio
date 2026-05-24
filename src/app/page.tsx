@@ -82,7 +82,7 @@ export default function HomePage() {
             }}
           >
             <HandNote
-              note={'esse define\no resto.'}
+              note={'esse definiu\no resto.'}
               rotation={-8}
               origin="right top"
               align="right"
@@ -164,7 +164,7 @@ export default function HomePage() {
             }}
           >
             <HandNote
-              note={'alguns ainda\nem rascunho.'}
+              note={'alguns ainda\nsão rascunhos.'}
               rotation={12}
               origin="left top"
               align="left"
