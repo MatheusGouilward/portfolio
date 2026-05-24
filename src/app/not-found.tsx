@@ -29,7 +29,7 @@ export default function NotFound() {
           }}
         >
           <HandNote
-            note={'talvez esse caminho\nnunca existiu.'}
+            note={'culpa minha,\nnão sua.'}
             rotation={-5}
             origin="right top"
             align="right"
