@@ -3,6 +3,7 @@ import { site } from '@/lib/site'
 import { HandNote } from '@/components/hand-note'
 import { HickGesture } from '@/components/hick-gesture'
 import { SpecCTA } from '@/components/spec-cta'
+import { PolaroidDraggable } from '@/components/polaroid-draggable'
 
 export const metadata = {
   title: 'About',
@@ -49,7 +50,18 @@ const timeline: Milestone[] = [
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-5xl px-6 pt-24 pb-12 sm:px-10 sm:pt-32">
+    <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-12 sm:px-10 sm:pt-32">
+      {/* Polaroid arrastável — gesto humano, anti-cheiro-de-IA (§22.7).
+          Posicionada no canto superior-direito do wrapper em xl+; oculta em <md. */}
+      <PolaroidDraggable
+        photoSrc="/personal/matt.jpg"
+        maskSrc="/personal/mask.png"
+        alt="foto de Matt Goulart"
+        initialRotation={-4}
+        className="absolute z-10"
+        style={{ top: '7rem', right: '2.5rem' }}
+      />
+
       <header className="mb-24 max-w-3xl">
         <p className="mono-upper text-[var(--pencil-mid)]">About</p>
         <h1 className="display-monumental mt-8 text-balance text-[clamp(3rem,8vw,7rem)]">
