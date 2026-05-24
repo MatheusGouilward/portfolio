@@ -137,7 +137,7 @@ export default function HomePage() {
             }}
           >
             <HandNote
-              note={'esse log\né meu rascunho ao vivo.'}
+              note={'esses logs\nsão meus rascunhos ao vivo.'}
               rotation={10}
               origin="left top"
               align="left"
