@@ -38,7 +38,7 @@ export default function WorkIndex() {
           }}
         >
           <HandNote
-            note={'vivência é o que sobra\ndepois do projeto.'}
+            note={'o que ficou comigo,\nnão o que ficou no produto.'}
             rotation={9}
             origin="left top"
             align="left"
