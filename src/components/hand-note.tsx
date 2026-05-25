@@ -181,32 +181,64 @@ function HandNoteScrub({
     let cancelled = false
     let killAll: (() => void) | null = null
 
-    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
-      ([{ gsap }, { ScrollTrigger }]) => {
-        if (cancelled || !el) return
-        gsap.registerPlugin(ScrollTrigger)
+    Promise.all([
+      import('gsap'),
+      import('gsap/ScrollTrigger'),
+      import('gsap/SplitText'),
+    ]).then(([{ gsap }, { ScrollTrigger }, { SplitText }]) => {
+      if (cancelled || !el) return
+      gsap.registerPlugin(ScrollTrigger, SplitText)
 
-        gsap.set(el, { opacity: 0, y: 12 })
+      const split = new SplitText(el, {
+        type: 'chars,words',
+        charsClass: 'hn-char',
+        wordsClass: 'hn-word',
+      })
 
-        const tween = gsap.to(el, {
-          opacity: 1,
-          y: 0,
-          ease: 'none',
-          scrollTrigger: {
-            trigger,
-            start: 'top 85%',
-            end: 'top 40%',
-            scrub: true,
-          },
-        })
+      // Initial state per char: ink falling onto paper.
+      // Random rotation ±3° per char is what signs the human hand —
+      // each letter starts crooked differently, kills the mechanical
+      // "UI revealing a block" look.
+      gsap.set(split.chars, {
+        opacity: 0,
+        y: 6,
+        filter: 'blur(3px)',
+        scale: 0.88,
+        rotation: () => gsap.utils.random(-3, 3),
+        transformOrigin: 'center bottom',
+        display: 'inline-block',
+        willChange: 'transform, opacity, filter',
+      })
 
-        killAll = () => {
-          tween.scrollTrigger?.kill()
-          tween.kill()
-          gsap.set(el, { clearProps: 'opacity,y' })
-        }
-      },
-    )
+      // Timeline scrubbed to parent section. 25ms char stagger,
+      // power2.out for natural ink settle, scrub 0.5 for soft catch-up
+      // (not rigid, not nervous).
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger,
+          start: 'top 85%',
+          end: 'top 35%',
+          scrub: 0.5,
+        },
+      })
+
+      tl.to(split.chars, {
+        opacity: 1,
+        y: 0,
+        filter: 'blur(0px)',
+        scale: 1,
+        rotation: 0,
+        ease: 'power2.out',
+        duration: 0.4,
+        stagger: { each: 0.025, from: 'start' },
+      })
+
+      killAll = () => {
+        tl.scrollTrigger?.kill()
+        tl.kill()
+        split.revert()
+      }
+    })
 
     return () => {
       cancelled = true
