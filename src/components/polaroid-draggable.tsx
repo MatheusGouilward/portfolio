@@ -56,6 +56,10 @@ type PolaroidDraggableProps = {
   maskHeight?: string
   /** Offset à esquerda em %. Se ausente, centraliza horizontal. */
   maskLeft?: string
+  /** Rotação adicional da máscara em graus. A polaroid inteira já gira
+   *  via initialRotation (herança visual); esta prop reforça/ajusta a
+   *  inclinação INTRÍNSECA da máscara pra encaixar no rosto da foto. */
+  maskRotation?: number
   className?: string
   style?: React.CSSProperties
 }
@@ -74,6 +78,7 @@ export function PolaroidDraggable({
   maskWidth = '55%',
   maskHeight = 'auto',
   maskLeft,
+  maskRotation = 0,
   className,
   style,
 }: PolaroidDraggableProps) {
@@ -147,15 +152,16 @@ export function PolaroidDraggable({
           }
           whileDrag={{ cursor: 'grabbing', scale: 1.04 }}
           className="absolute block cursor-grab"
+          // Motion combina x/y (drag) + rotate em transforms internos — não
+          // conflita. Rotação fica fixa, drag livre em x/y.
           style={{
             top: maskTop,
             left: leftPos,
             width: maskWidth,
             height: maskHeight,
-            // Reserva slot pre-load: aspect 1/1 quando height é auto, evita
-            // layout shift se a imagem demorar a carregar.
             aspectRatio: maskHeight === 'auto' ? '1 / 1' : undefined,
             objectFit: 'contain',
+            rotate: `${maskRotation}deg`,
           }}
         />
       </div>
