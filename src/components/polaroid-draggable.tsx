@@ -99,7 +99,9 @@ export function PolaroidDraggable({
   function playAudio() {
     const audio = audioRef.current
     if (!audio) return
-    audio.currentTime = 0
+    // Skip dos ~1.5s iniciais de silêncio no MP3 — easter egg curto
+    // precisa de impacto imediato pra ser percebido.
+    audio.currentTime = 1.5
     audio.volume = audioVolume
     audio.play().catch(() => {
       // Autoplay policy ou erro silencioso — ignora.
@@ -111,7 +113,7 @@ export function PolaroidDraggable({
     const audio = audioRef.current
     if (!audio) return
     audio.pause()
-    audio.currentTime = 0
+    audio.currentTime = 1.5
   }
 
   // Centraliza horizontalmente via CSS puro quando maskLeft não passado.
