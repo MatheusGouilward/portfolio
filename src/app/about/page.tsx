@@ -58,6 +58,9 @@ export default function AboutPage() {
         maskSrc="/personal/mask.png"
         alt="foto de Matt Goulart"
         initialRotation={-4}
+        maskTop="14%"
+        maskWidth="55%"
+        maskHeight="38%"
         className="absolute z-10"
         style={{ top: '7rem', right: '2.5rem' }}
       />

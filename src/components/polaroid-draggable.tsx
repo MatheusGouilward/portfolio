@@ -12,8 +12,8 @@ import { cn } from '@/lib/utils'
  *
  * Comportamento:
  * - Polaroid inteira arrasta livre e fica onde solta (dragMomentum=false).
- * - Máscara arrasta DENTRO da polaroid e volta com snap magnético pra
- *   posição inicial (dragSnapToOrigin + spring).
+ * - Máscara arrasta livre (sem dragConstraints) e volta com snap magnético
+ *   pra posição inicial via dragSnapToOrigin + spring.
  * - Mobile (<md) fica oculto pra não confundir touch users.
  * - prefers-reduced-motion: snap da máscara fica instantâneo (spring rígido).
  *
@@ -23,8 +23,11 @@ import { cn } from '@/lib/utils'
  *   paletas, especialmente carvao-giz onde --paper é escuro.
  *
  * Máscara:
- * - Renderizada em tamanho dimensionado (não preenche o photo area).
- * - Posição e tamanho ajustáveis via props pra encaixar exato no rosto.
+ * - Props em % (relativas ao photo area) — redimensiona junto se PHOTO_*
+ *   mudar. Defaults calibrados pra foto do Matt.
+ * - Centralização horizontal automática via `calc((100% - maskWidth) / 2)`.
+ *   CSS puro, não usa transform (que conflitaria com o transform que o
+ *   Motion injeta no drag).
  *
  * Acessibilidade:
  * - alt descritivo na foto.
@@ -35,7 +38,7 @@ import { cn } from '@/lib/utils'
  * Performance:
  * - Foto via next/image (otimização automática, evita LCP hit do JPG raw).
  *
- * Spec §22.7 do TASKS.md.
+ * Specs §22.7 + §22.7.1 do TASKS.md.
  */
 type PolaroidDraggableProps = {
   photoSrc: string
@@ -45,12 +48,14 @@ type PolaroidDraggableProps = {
   signatureAlt?: string
   alt?: string
   initialRotation?: number
-  /** Largura da máscara em px. Default 160. */
-  maskSize?: number
-  /** Offset X da máscara dentro do photo area (top-left). Default centrado. */
-  maskInitialX?: number
-  /** Offset Y da máscara dentro do photo area. Default 60 (terço superior). */
-  maskInitialY?: number
+  /** Offset do topo da máscara em % do photo area. Default '14%'. */
+  maskTop?: string
+  /** Largura da máscara em % do photo area. Default '55%'. */
+  maskWidth?: string
+  /** Altura da máscara em % do photo area. Default 'auto' (mantém aspect). */
+  maskHeight?: string
+  /** Offset à esquerda em %. Se ausente, centraliza horizontal. */
+  maskLeft?: string
   className?: string
   style?: React.CSSProperties
 }
@@ -65,17 +70,19 @@ export function PolaroidDraggable({
   signatureAlt = 'assinatura',
   alt = 'foto de Matt Goulart',
   initialRotation = -3,
-  maskSize = 160,
-  maskInitialX,
-  maskInitialY = 60,
+  maskTop = '14%',
+  maskWidth = '55%',
+  maskHeight = 'auto',
+  maskLeft,
   className,
   style,
 }: PolaroidDraggableProps) {
   const photoAreaRef = useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion() ?? false
 
-  // Default: centrar horizontalmente
-  const xPos = maskInitialX ?? Math.round((PHOTO_WIDTH - maskSize) / 2)
+  // Centraliza horizontalmente via CSS puro quando maskLeft não passado.
+  // calc não cria transform — preserva origin estável pro dragSnapToOrigin.
+  const leftPos = maskLeft ?? `calc((100% - ${maskWidth}) / 2)`
 
   return (
     <motion.div
@@ -90,7 +97,6 @@ export function PolaroidDraggable({
         className,
       )}
       style={{
-        // Off-white fixo — contrasta em todas as paletas (especialmente carvao-giz)
         background: '#fafafa',
         padding: '14px 14px 56px',
         boxShadow:
@@ -102,13 +108,11 @@ export function PolaroidDraggable({
         ...style,
       }}
     >
-      {/* Container do photo area — define dimensions sem overflow-hidden no
-          wrapper externo (pra máscara poder vazar livre). */}
       <div
         className="relative"
         style={{ width: PHOTO_WIDTH, height: PHOTO_HEIGHT }}
       >
-        {/* Foto clipada — overflow-hidden só na foto, não na máscara */}
+        {/* Foto clipada — overflow-hidden só na foto */}
         <div
           ref={photoAreaRef}
           className="absolute inset-0 overflow-hidden"
@@ -126,9 +130,9 @@ export function PolaroidDraggable({
           />
         </div>
 
-        {/* Máscara — sibling da foto, FORA do overflow-hidden. Drag livre:
-            sem dragConstraints, sem dragElastic. Solta = volta pro centro
-            com spring (dragSnapToOrigin). */}
+        {/* Máscara — sibling da foto, FORA do overflow-hidden.
+            Posicionamento em % do photo area. CSS layout puro (left + top
+            via calc) — sem transform pré-drag pra Motion não interferir. */}
         <motion.img
           src={maskSrc}
           alt=""
@@ -144,10 +148,14 @@ export function PolaroidDraggable({
           whileDrag={{ cursor: 'grabbing', scale: 1.04 }}
           className="absolute block cursor-grab"
           style={{
-            top: maskInitialY,
-            left: xPos,
-            width: maskSize,
-            height: 'auto',
+            top: maskTop,
+            left: leftPos,
+            width: maskWidth,
+            height: maskHeight,
+            // Reserva slot pre-load: aspect 1/1 quando height é auto, evita
+            // layout shift se a imagem demorar a carregar.
+            aspectRatio: maskHeight === 'auto' ? '1 / 1' : undefined,
+            objectFit: 'contain',
           }}
         />
       </div>
