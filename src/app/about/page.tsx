@@ -59,9 +59,12 @@ export default function AboutPage() {
         alt="foto de Matt Goulart"
         initialRotation={-4}
         maskTop="-13%"
+        maskLeft="0"
         maskWidth="110%"
         maskHeight="76%"
         maskRotation={-4}
+        audioSrc="/personal/cruel-angels-thesis.mp3"
+        audioVolume={0.4}
         className="absolute z-10"
         style={{ top: '7rem', right: '2.5rem' }}
       />

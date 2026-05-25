@@ -60,6 +60,14 @@ type PolaroidDraggableProps = {
    *  via initialRotation (herança visual); esta prop reforça/ajusta a
    *  inclinação INTRÍNSECA da máscara pra encaixar no rosto da foto. */
   maskRotation?: number
+  /**
+   * Easter egg: src de áudio que toca enquanto a máscara está sendo arrastada.
+   * Começa em `onDragStart`, pausa + reset em `onDragEnd`. Volume 0.4 default
+   * pra não assustar. Lazy load (preload="none"). Se ausente, sem áudio.
+   */
+  audioSrc?: string
+  /** Volume do áudio easter egg (0–1). Default 0.4. */
+  audioVolume?: number
   className?: string
   style?: React.CSSProperties
 }
@@ -79,11 +87,32 @@ export function PolaroidDraggable({
   maskHeight = 'auto',
   maskLeft,
   maskRotation = 0,
+  audioSrc,
+  audioVolume = 0.4,
   className,
   style,
 }: PolaroidDraggableProps) {
   const photoAreaRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
   const reduced = useReducedMotion() ?? false
+
+  function playAudio() {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.currentTime = 0
+    audio.volume = audioVolume
+    audio.play().catch(() => {
+      // Autoplay policy ou erro silencioso — ignora.
+      // (dragStart é gesto do usuário, então normalmente passa.)
+    })
+  }
+
+  function stopAudio() {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.pause()
+    audio.currentTime = 0
+  }
 
   // Centraliza horizontalmente via CSS puro quando maskLeft não passado.
   // calc não cria transform — preserva origin estável pro dragSnapToOrigin.
@@ -151,6 +180,8 @@ export function PolaroidDraggable({
               : { bounceStiffness: 420, bounceDamping: 18 }
           }
           whileDrag={{ cursor: 'grabbing', scale: 1.04 }}
+          onDragStart={audioSrc ? playAudio : undefined}
+          onDragEnd={audioSrc ? stopAudio : undefined}
           className="absolute block cursor-grab"
           // Motion combina x/y (drag) + rotate em transforms internos — não
           // conflita. Rotação fica fixa, drag livre em x/y.
@@ -182,6 +213,17 @@ export function PolaroidDraggable({
             objectFit: 'contain',
             objectPosition: 'center',
           }}
+        />
+      ) : null}
+
+      {/* Easter egg audio — toca enquanto a máscara está sendo arrastada.
+          preload="none" pra não baixar até o usuário interagir. */}
+      {audioSrc ? (
+        <audio
+          ref={audioRef}
+          src={audioSrc}
+          preload="none"
+          aria-hidden
         />
       ) : null}
     </motion.div>
