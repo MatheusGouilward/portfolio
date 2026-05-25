@@ -63,7 +63,7 @@ export default function AboutPage() {
         maskWidth="110%"
         maskHeight="76%"
         maskRotation={-4}
-        audioSrc="/personal/cruel-angels-thesis.mp3"
+        audioSrc="/personal/cruel-angels-thesis.opus"
         audioVolume={0.4}
         className="absolute z-10"
         style={{ top: '7rem', right: '2.5rem' }}
