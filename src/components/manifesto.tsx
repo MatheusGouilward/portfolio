@@ -7,6 +7,11 @@ import { useBlueprint } from './blueprint-provider'
 
 const STRIKE_PATH = 'M 1 5 Q 25 3.4, 50 5 T 99 5'
 
+// Rotação determinística por índice (±1.5°). Evita Math.random pra não
+// quebrar hydration SSR/client. Pattern manualmente afinado pra ler como
+// jitter humano, não padrão mecânico.
+const ROT_PATTERN = [-1.2, 1.4, -1.0, 1.5, -1.3, 0.9, -1.5, 1.1]
+
 /**
  * Manifesto — H1 monumental + riscada handwritten.
  *
@@ -131,34 +136,49 @@ export function Manifesto() {
         </span>
       </div>
 
-      {/* Manifesto monumental — Motion whileInView (entrada one-shot).
-          NÃO usa scroll-construction porque section está above the fold;
-          scroll-construction não animaria visualmente (trigger já passed
-          ao mount). CLAUDE.md §23 prescreve Motion aqui pra preservar LCP. */}
+      {/* Manifesto monumental — ink-settle word-by-word (Motion whileInView).
+          Cada palavra cai borrada + ligeiramente torta e "assenta". Mesma
+          família visual do scroll-construction nas outras seções.
+          Rotação determinística por índice (sem Math.random pra evitar
+          hydration mismatch). */}
       {reduced ? (
         <h1 className="display-monumental">{site.manifesto}</h1>
       ) : (
         <h1 aria-label={site.manifesto} className="display-monumental">
-          {words.map((word, i) => (
-            <motion.span
-              key={`${word}-${i}`}
-              aria-hidden
-              // Reveal top→bottom via clip-path — cada palavra "sobe sendo
-              // escrita". LCP preservado: pixel é PINTADO (só clipado),
-              // não invisible-opacity-0 que atrasaria o paint.
-              initial={{ clipPath: 'inset(0 0 100% 0)', y: 8 }}
-              animate={{ clipPath: 'inset(0 0 0% 0)', y: 0 }}
-              transition={{
-                duration: 0.72,
-                delay: 0.05 + i * 0.05,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="inline-block whitespace-pre"
-            >
-              {word}
-              {i < words.length - 1 ? ' ' : ''}
-            </motion.span>
-          ))}
+          {words.map((word, i) => {
+            const rot = ROT_PATTERN[i % ROT_PATTERN.length]
+            return (
+              <motion.span
+                key={`${word}-${i}`}
+                aria-hidden
+                initial={{
+                  opacity: 0,
+                  y: 14,
+                  scale: 0.94,
+                  filter: 'blur(4px)',
+                  rotate: rot,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  filter: 'blur(0px)',
+                  rotate: 0,
+                }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.05 + i * 0.07,
+                  // power3.out aprox em cubic-bezier
+                  ease: [0.215, 0.61, 0.355, 1],
+                }}
+                style={{ transformOrigin: 'center bottom' }}
+                className="inline-block whitespace-pre"
+              >
+                {word}
+                {i < words.length - 1 ? ' ' : ''}
+              </motion.span>
+            )
+          })}
         </h1>
       )}
     </div>
