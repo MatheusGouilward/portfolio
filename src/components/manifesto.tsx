@@ -28,6 +28,7 @@ export function Manifesto() {
   const heroRef = useRef<HTMLDivElement>(null)
   const riscadaRef = useRef<HTMLDivElement>(null)
   const h1Ref = useRef<HTMLHeadingElement>(null)
+  const textRef = useRef<HTMLSpanElement>(null)
 
   /**
    * Parallax assimétrico — a riscada se desloca y: -40px conforme scroll,
@@ -75,22 +76,25 @@ export function Manifesto() {
   }, [reduced])
 
   /**
-   * Animação do manifesto h1 — typewriter clean char-by-char.
-   * Cada letra aparece em sequência (opacity), ease linear, stagger
-   * regular — simula ritmo de digitação. Combina com vocabulário
-   * terminal/monospace do site ($ git log, cursor █).
+   * Manifesto com cursor terminal + typewriter:
+   * 1. h1 abre invisível (CSS opacity 0)
+   * 2. GSAP + SplitText carregam
+   * 3. h1 vira visível → cursor aparece sozinho piscando (CSS keyframe)
+   * 4. Após ~700ms, manifesto é "digitado" char-by-char
+   * 5. Truque pra cursor andar: chars iniciam `display: none` (não ocupam
+   *    espaço) e viram `inline-block` em sequência. Cursor sibling
+   *    sempre fica logo após o último char visível.
    *
-   * Aguarda document.fonts.ready pra evitar SplitText quebrar com
-   * métricas erradas e re-layout durante animação.
-   *
-   * onComplete → split.revert() restaura DOM puro (acessibilidade +
-   * select-text).
+   * Cursor continua piscando após o manifesto inteiro digitado.
+   * Sem split.revert() porque cursor precisa do textRef intacto pra
+   * ficar grudado no fim.
    */
   useEffect(() => {
     if (reduced) return
     if (typeof window === 'undefined') return
     const h1 = h1Ref.current
-    if (!h1) return
+    const text = textRef.current
+    if (!h1 || !text) return
 
     let cancelled = false
     let cleanup: (() => void) | null = null
@@ -100,25 +104,27 @@ export function Manifesto() {
       import('gsap'),
       import('gsap/SplitText'),
     ]).then(([, { gsap }, { SplitText }]) => {
-      if (cancelled || !h1) return
+      if (cancelled || !text) return
       gsap.registerPlugin(SplitText)
 
-      // Parent visível (CSS começou em opacity 0 pra evitar flash)
+      // h1 visível agora (cursor pisca sozinho antes do typewriter)
       gsap.set(h1, { opacity: 1 })
 
-      const split = SplitText.create(h1, {
-        type: 'chars,words',
+      const split = SplitText.create(text, {
+        type: 'chars',
         charsClass: 'char',
       })
 
-      const tween = gsap.from(split.chars, {
-        opacity: 0,
-        duration: 0.05,
-        stagger: 0.04,
+      // Chars iniciam fora do fluxo — cursor fica no início do h1.
+      // Cada um vai pra inline-block no stagger, empurrando o cursor.
+      gsap.set(split.chars, { display: 'none' })
+
+      const tween = gsap.to(split.chars, {
+        delay: 0.7, // cursor sozinho piscando antes da digitação
+        display: 'inline-block',
+        duration: 0.01,
+        stagger: 0.045,
         ease: 'none',
-        onComplete: () => {
-          split.revert()
-        },
       })
 
       cleanup = () => {
@@ -126,7 +132,7 @@ export function Manifesto() {
         try {
           split.revert()
         } catch {
-          // já reverted via onComplete
+          // ignorar
         }
       }
     })
@@ -201,7 +207,24 @@ export function Manifesto() {
         className="display-monumental"
         style={{ opacity: reduced ? 1 : 0 }}
       >
-        {site.manifesto}
+        <span ref={textRef}>{site.manifesto}</span>
+        {/* Cursor terminal — pisca via .animate-blink (globals.css).
+            Reduced motion: cursor escondido (sem CSS animation rodando). */}
+        {!reduced ? (
+          <span
+            aria-hidden
+            className="animate-blink"
+            style={{
+              display: 'inline-block',
+              width: '0.08em',
+              height: '0.82em',
+              background: 'var(--pencil-darkest)',
+              marginLeft: '0.06em',
+              verticalAlign: 'baseline',
+              transform: 'translateY(-0.05em)',
+            }}
+          />
+        ) : null}
       </h1>
     </div>
   )
