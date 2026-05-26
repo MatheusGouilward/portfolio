@@ -7,36 +7,31 @@ import { useBlueprint } from './blueprint-provider'
 
 const STRIKE_PATH = 'M 1 5 Q 25 3.4, 50 5 T 99 5'
 
-// Rotação determinística por índice (±1.5°). Evita Math.random pra não
-// quebrar hydration SSR/client. Pattern manualmente afinado pra ler como
-// jitter humano, não padrão mecânico.
-const ROT_PATTERN = [-1.2, 1.4, -1.0, 1.5, -1.3, 0.9, -1.5, 1.1]
-
 /**
  * Manifesto — H1 monumental + riscada handwritten.
  *
- * Animação word-by-word do h1 usa Motion whileInView (entrada one-shot,
- * not scroll-locked). CLAUDE.md §23 prescreve esse padrão pra conteúdo
- * above-the-fold — scroll-construction não animaria visualmente (trigger
- * já "passed" ao mount).
+ * Animação char-by-char com flip 3D no eixo X. Cada letra "cai de costas"
+ * girando 180°, scaling de 0, com overshoot back. Inspirado em
+ * gsap.com/demos/revert-after-animation. SplitText.revert() limpa o DOM
+ * após complete (chars viram texto puro de novo).
  *
- * Riscada usa Motion (pathLength SVG) + parallax assimétrico via GSAP
- * scrolllTrigger no hero section.
+ * Trade-off LCP: h1 inicia com opacity 0 inline pra evitar pisca
+ * (visível → invisível → animar). Texto fica oculto até GSAP carregar
+ * via dynamic import (~300-500ms). Aceito por wow factor.
  *
- * Ref §23 CLAUDE.md.
+ * Reduced motion: h1 renderiza visível imediato, sem split.
  */
 export function Manifesto() {
   const reduced = useReducedMotion() ?? false
   const { on } = useBlueprint()
-  const words = site.manifesto.split(' ')
   const { previous } = site.manifestoMeta
   const heroRef = useRef<HTMLDivElement>(null)
   const riscadaRef = useRef<HTMLDivElement>(null)
+  const h1Ref = useRef<HTMLHeadingElement>(null)
 
   /**
    * Parallax assimétrico — a riscada se desloca y: -40px conforme scroll,
    * 30% mais devagar que o display monumental (scrub 0.5).
-   * Trigger: closest('section') do heroRef pra pegar a altura total do hero.
    * Spec §22.4 Experimento B.
    */
   useEffect(() => {
@@ -79,10 +74,71 @@ export function Manifesto() {
     }
   }, [reduced])
 
+  /**
+   * Animação do manifesto h1 — chars caindo de costas com flip 3D.
+   * Inspirado em demos.gsap.com/demo/revert-after-animation.
+   *
+   * Aguarda fontes carregarem (document.fonts.ready) pra evitar
+   * SplitText quebrar com métricas erradas e re-layout durante animação.
+   */
+  useEffect(() => {
+    if (reduced) return
+    if (typeof window === 'undefined') return
+    const h1 = h1Ref.current
+    if (!h1) return
+
+    let cancelled = false
+    let cleanup: (() => void) | null = null
+
+    Promise.all([
+      document.fonts.ready,
+      import('gsap'),
+      import('gsap/SplitText'),
+    ]).then(([, { gsap }, { SplitText }]) => {
+      if (cancelled || !h1) return
+      gsap.registerPlugin(SplitText)
+
+      // Parent visível agora (CSS começou em opacity 0 pra evitar flash)
+      gsap.set(h1, { opacity: 1 })
+
+      const split = SplitText.create(h1, {
+        type: 'chars,words',
+        charsClass: 'char',
+      })
+
+      const tween = gsap.from(split.chars, {
+        duration: 1,
+        opacity: 0,
+        scale: 0,
+        y: 80,
+        rotationX: 180,
+        transformOrigin: '0% 50% -50',
+        ease: 'back',
+        stagger: 0.05,
+        onComplete: () => {
+          split.revert()
+        },
+      })
+
+      cleanup = () => {
+        tween.kill()
+        try {
+          split.revert()
+        } catch {
+          // já reverted via onComplete
+        }
+      }
+    })
+
+    return () => {
+      cancelled = true
+      cleanup?.()
+    }
+  }, [reduced])
+
   return (
     <div ref={heroRef}>
-      {/* Rascunho riscado — versão genérica da indústria, rejeitada.
-          Respeita o blueprint toggle. Faz parallax sutil no scroll. */}
+      {/* Rascunho riscado — versão genérica da indústria, rejeitada. */}
       <div
         ref={riscadaRef}
         aria-hidden={!on}
@@ -136,51 +192,16 @@ export function Manifesto() {
         </span>
       </div>
 
-      {/* Manifesto monumental — ink-settle word-by-word (Motion whileInView).
-          Cada palavra cai borrada + ligeiramente torta e "assenta". Mesma
-          família visual do scroll-construction nas outras seções.
-          Rotação determinística por índice (sem Math.random pra evitar
-          hydration mismatch). */}
-      {reduced ? (
-        <h1 className="display-monumental">{site.manifesto}</h1>
-      ) : (
-        <h1 aria-label={site.manifesto} className="display-monumental">
-          {words.map((word, i) => {
-            const rot = ROT_PATTERN[i % ROT_PATTERN.length]
-            return (
-              <motion.span
-                key={`${word}-${i}`}
-                aria-hidden
-                initial={{
-                  opacity: 0,
-                  y: 14,
-                  scale: 0.94,
-                  filter: 'blur(4px)',
-                  rotate: rot,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  filter: 'blur(0px)',
-                  rotate: 0,
-                }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.05 + i * 0.07,
-                  // power3.out aprox em cubic-bezier
-                  ease: [0.215, 0.61, 0.355, 1],
-                }}
-                style={{ transformOrigin: 'center bottom' }}
-                className="inline-block whitespace-pre"
-              >
-                {word}
-                {i < words.length - 1 ? ' ' : ''}
-              </motion.span>
-            )
-          })}
-        </h1>
-      )}
+      {/* H1 inicia com opacity 0 inline (evita flash visível → invisível
+          quando GSAP monta). Quando reduced motion, opacity 1 direto. */}
+      <h1
+        ref={h1Ref}
+        aria-label={site.manifesto}
+        className="display-monumental"
+        style={{ opacity: reduced ? 1 : 0, perspective: '600px' }}
+      >
+        {site.manifesto}
+      </h1>
     </div>
   )
 }
