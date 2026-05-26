@@ -8,6 +8,7 @@ import { ThoughtsEditorial } from '@/components/thoughts-editorial'
 import { HandNote } from '@/components/hand-note'
 import { SpecCTA } from '@/components/spec-cta'
 import { Trajectory } from '@/components/trajectory'
+import { ConstructionSection } from '@/components/construction-section'
 import { getLatestCrafts } from '@/lib/crafts'
 import { getRecentThoughts } from '@/lib/thoughts'
 import { getPublishedWorks } from '@/lib/work'
@@ -19,7 +20,10 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 pb-12 sm:px-10">
-      <section aria-labelledby="manifesto" className="relative mt-24 sm:mt-32">
+      <ConstructionSection
+        aria-labelledby="manifesto"
+        className="relative mt-24 sm:mt-32"
+      >
         <h2 id="manifesto" className="sr-only">Manifesto</h2>
 
         <div className="relative">
@@ -61,9 +65,12 @@ export default function HomePage() {
             Como cheguei aqui →
           </Link>
         </div>
-      </section>
+      </ConstructionSection>
 
-      <section aria-labelledby="cases" className="relative mt-40 sm:mt-56">
+      <ConstructionSection
+        aria-labelledby="cases"
+        className="relative mt-40 sm:mt-56"
+      >
         <SectionHeading id="cases" label="Cases selecionados" link="/work" linkLabel="ver todos" />
 
         <div className="relative mt-12">
@@ -71,8 +78,6 @@ export default function HomePage() {
             <CaseEditorial key={w.slug} work={w} number={i + 1} />
           ))}
 
-          {/* Regra: rotação negativa → lado esquerdo do conteúdo, 80px de gap.
-              Anotação não repete a tagline — comenta a relação entre os dois cases. */}
           <div
             aria-hidden
             className="pointer-events-none absolute hidden xl:block"
@@ -87,13 +92,15 @@ export default function HomePage() {
               origin="right top"
               align="right"
               fontSize="16px"
-              scrub
             />
           </div>
         </div>
-      </section>
+      </ConstructionSection>
 
-      <section aria-labelledby="craft" className="relative mt-32 sm:mt-40">
+      <ConstructionSection
+        aria-labelledby="craft"
+        className="relative mt-32 sm:mt-40"
+      >
         <h2 id="craft" className="sr-only">
           Experimentos recentes
         </h2>
@@ -119,7 +126,6 @@ export default function HomePage() {
             ))}
           </ol>
 
-          {/* Cursor piscando após a última row — fim do prompt */}
           <span
             aria-hidden
             className="animate-blink mt-2 inline-block font-mono text-[16px] leading-none text-[var(--pencil-darkest)]"
@@ -127,7 +133,6 @@ export default function HomePage() {
             █
           </span>
 
-          {/* Rotação positiva → lado direito do conteúdo, 80px de gap. */}
           <div
             aria-hidden
             className="pointer-events-none absolute hidden xl:block"
@@ -142,19 +147,20 @@ export default function HomePage() {
               origin="left top"
               align="left"
               fontSize="16px"
-              scrub
             />
           </div>
         </div>
-      </section>
+      </ConstructionSection>
 
-      <section aria-labelledby="thoughts" className="relative mt-32 sm:mt-40">
+      <ConstructionSection
+        aria-labelledby="thoughts"
+        className="relative mt-32 sm:mt-40"
+      >
         <SectionHeading id="thoughts" label="Notas recentes" link="/thoughts" linkLabel="ver todos" />
 
         <div className="relative">
           <ThoughtsEditorial thoughts={thoughts} className="mt-12" />
 
-          {/* Rotação positiva → lado direito, 80px gap, alinhada ao lead. */}
           <div
             aria-hidden
             className="pointer-events-none absolute hidden xl:block"
@@ -169,16 +175,17 @@ export default function HomePage() {
               origin="left top"
               align="left"
               fontSize="16px"
-              scrub
             />
           </div>
         </div>
-      </section>
+      </ConstructionSection>
 
-      <section aria-labelledby="trajetoria" className="relative mt-32 sm:mt-40">
+      <ConstructionSection
+        aria-labelledby="trajetoria"
+        className="relative mt-32 sm:mt-40"
+      >
         <Trajectory />
 
-        {/* Link pro /about — leitura mais profunda da trajetória. */}
         <div className="mt-10">
           <Link
             href="/about"
@@ -188,7 +195,7 @@ export default function HomePage() {
             História completa em /sobre →
           </Link>
         </div>
-      </section>
+      </ConstructionSection>
     </div>
   )
 }

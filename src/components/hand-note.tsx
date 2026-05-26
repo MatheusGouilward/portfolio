@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'motion/react'
-import { Fragment, useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, type CSSProperties, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { useBlueprint } from './blueprint-provider'
 
@@ -10,7 +10,7 @@ type HandNoteProps = {
   note: string
   /** Inclinação em graus. Default -3. */
   rotation?: number
-  /** Delay da entrada (segundos) — ignorado quando scrub=true. */
+  /** Delay da entrada (segundos). Aplicado apenas no modo Motion whileInView. */
   delay?: number
   /** Origem do transform — onde a rotação "ancora". */
   origin?: 'left top' | 'right top' | 'left bottom' | 'right bottom' | 'center'
@@ -23,10 +23,11 @@ type HandNoteProps = {
   /** Força 1 linha (white-space: nowrap + width: max-content). */
   noWrap?: boolean
   /**
-   * Modo scroll-scrub: opacity + y atrelados ao progress da seção pai.
-   * Reverte se rolar pra cima. Quando false (default), usa Motion whileInView
-   * once:true. prefers-reduced-motion ignora scrub e renderiza estado final.
-   * Spec §22.4 do TASKS.md.
+   * @deprecated A partir do TASKS.md #39, a responsabilidade de animar HandNotes
+   * no scroll vive no hook `useScrollConstruction` (CLAUDE.md §23). Marca o span
+   * com `data-construct="handnote"` na section pai e o hook captura. A prop
+   * `scrub` agora é ignorada — mantida por compat enquanto callers são
+   * migrados.
    */
   scrub?: boolean
   className?: string
@@ -38,6 +39,11 @@ type HandNoteProps = {
  *
  * Quebra de linha: `\n` no note força quebra exata. Sem `\n` + sem noWrap,
  * usa maxWidth como limite e CSS auto-break.
+ *
+ * Sempre marca `data-construct="handnote"` no span — se a section pai
+ * envolver com <ConstructionSection layers={{ handnote: true }}>, o hook
+ * aplica ink-settle char-by-char no scroll. Caso contrário, o atributo
+ * fica inerte (zero cost) e a entrada vem de Motion whileInView.
  */
 export function HandNote({
   note,
@@ -48,7 +54,6 @@ export function HandNote({
   maxWidth = 220,
   align = 'right',
   noWrap = false,
-  scrub = false,
   className,
 }: HandNoteProps) {
   const { on } = useBlueprint()
@@ -94,25 +99,6 @@ export function HandNote({
       ))
     : note
 
-  // BRANCH 1 — scrub mode (GSAP ScrollTrigger)
-  if (scrub && !reduced) {
-    return (
-      <HandNoteScrub
-        rotation={rotation}
-        baseStyle={baseStyle}
-        baseClassName={cn(
-          'hand text-[var(--pencil)]',
-          inlineBlockClass,
-          className,
-        )}
-        on={on}
-      >
-        {content}
-      </HandNoteScrub>
-    )
-  }
-
-  // BRANCH 2 — reduced motion (estado final imediato, sem animação)
   const baseClassName = cn(
     'hand text-[var(--pencil)]',
     inlineBlockClass,
@@ -121,9 +107,11 @@ export function HandNote({
     className,
   )
 
+  // BRANCH 1 — reduced motion (estado final imediato, sem animação)
   if (reduced) {
     return (
       <span
+        data-construct="handnote"
         aria-hidden={!on}
         className={baseClassName}
         style={{ ...baseStyle, transform: `rotate(${rotation}deg)` }}
@@ -133,9 +121,13 @@ export function HandNote({
     )
   }
 
-  // BRANCH 3 — default (Motion whileInView once:true)
+  // BRANCH 2 — default (Motion whileInView once:true).
+  // Quando a section pai tem <ConstructionSection layers.handnote>, o hook
+  // toma controle via data-construct e o Motion whileInView fica dormente
+  // (o hook aplica gsap.set no element imediatamente após mount).
   return (
     <motion.span
+      data-construct="handnote"
       aria-hidden={!on}
       className={baseClassName}
       style={baseStyle}
@@ -146,118 +138,5 @@ export function HandNote({
     >
       {content}
     </motion.span>
-  )
-}
-
-/**
- * Scrub variant — GSAP ScrollTrigger atrela opacity + y ao progress da
- * section pai (closest('section') ou parentElement). Reverte se rolar pra cima.
- *
- * Blueprint toggle aqui controla `visibility` (snap) em vez de opacity, pra
- * não brigar com o GSAP que está animando opacity.
- */
-function HandNoteScrub({
-  rotation,
-  baseStyle,
-  baseClassName,
-  on,
-  children,
-}: {
-  rotation: number
-  baseStyle: CSSProperties
-  baseClassName: string
-  on: boolean
-  children: ReactNode
-}) {
-  const ref = useRef<HTMLSpanElement>(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const el = ref.current
-    if (!el) return
-    const trigger = el.closest('section') ?? el.parentElement
-    if (!trigger) return
-
-    let cancelled = false
-    let killAll: (() => void) | null = null
-
-    Promise.all([
-      import('gsap'),
-      import('gsap/ScrollTrigger'),
-      import('gsap/SplitText'),
-    ]).then(([{ gsap }, { ScrollTrigger }, { SplitText }]) => {
-      if (cancelled || !el) return
-      gsap.registerPlugin(ScrollTrigger, SplitText)
-
-      const split = new SplitText(el, {
-        type: 'chars,words',
-        charsClass: 'hn-char',
-        wordsClass: 'hn-word',
-      })
-
-      // Initial state per char: ink falling onto paper.
-      // Random rotation ±3° per char is what signs the human hand —
-      // each letter starts crooked differently, kills the mechanical
-      // "UI revealing a block" look.
-      gsap.set(split.chars, {
-        opacity: 0,
-        y: 6,
-        filter: 'blur(3px)',
-        scale: 0.88,
-        rotation: () => gsap.utils.random(-3, 3),
-        transformOrigin: 'center bottom',
-        display: 'inline-block',
-        willChange: 'transform, opacity, filter',
-      })
-
-      // Timeline scrubbed to parent section. 25ms char stagger,
-      // power2.out for natural ink settle, scrub 0.5 for soft catch-up
-      // (not rigid, not nervous).
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger,
-          start: 'top 85%',
-          end: 'top 35%',
-          scrub: 0.5,
-        },
-      })
-
-      tl.to(split.chars, {
-        opacity: 1,
-        y: 0,
-        filter: 'blur(0px)',
-        scale: 1,
-        rotation: 0,
-        ease: 'power2.out',
-        duration: 0.4,
-        stagger: { each: 0.025, from: 'start' },
-      })
-
-      killAll = () => {
-        tl.scrollTrigger?.kill()
-        tl.kill()
-        split.revert()
-      }
-    })
-
-    return () => {
-      cancelled = true
-      killAll?.()
-    }
-  }, [])
-
-  return (
-    <span
-      ref={ref}
-      aria-hidden={!on}
-      className={baseClassName}
-      style={{
-        ...baseStyle,
-        transform: `rotate(${rotation}deg)`,
-        visibility: on ? 'visible' : 'hidden',
-      }}
-    >
-      {children}
-    </span>
   )
 }

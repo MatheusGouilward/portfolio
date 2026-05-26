@@ -7,10 +7,18 @@ import { useBlueprint } from './blueprint-provider'
 
 const STRIKE_PATH = 'M 1 5 Q 25 3.4, 50 5 T 99 5'
 
+/**
+ * Manifesto — H1 monumental + riscada handwritten.
+ *
+ * Animação word-by-word do h1 agora vem do hook `useScrollConstruction`
+ * (via `data-construct="heading"`) — não mais via Motion local. Mantém
+ * apenas a riscada (Motion pathLength) + parallax assimétrico da riscada.
+ *
+ * Ref §23 CLAUDE.md, TASKS.md #39.
+ */
 export function Manifesto() {
   const reduced = useReducedMotion() ?? false
   const { on } = useBlueprint()
-  const words = site.manifesto.split(' ')
   const { previous } = site.manifestoMeta
   const heroRef = useRef<HTMLDivElement>(null)
   const riscadaRef = useRef<HTMLDivElement>(null)
@@ -118,34 +126,17 @@ export function Manifesto() {
         </span>
       </div>
 
-      {/* Manifesto monumental. Anotação vive FORA do componente — no gutter
-          direito do hero (ver app/page.tsx). Esse componente entrega só o texto. */}
-      {reduced ? (
-        <h1 className="display-monumental">{site.manifesto}</h1>
-      ) : (
-        <h1 aria-label={site.manifesto} className="display-monumental">
-          {words.map((word, i) => (
-            <motion.span
-              key={`${word}-${i}`}
-              aria-hidden
-              // Todas palavras começam visíveis (opacity 1) e animam só o y.
-              // Necessário pra LCP — qualquer palavra com opacity 0 inicial
-              // vira o LCP element e bloqueia o paint. Stagger de 40ms via y.
-              initial={{ y: 14 }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 0.7,
-                delay: 0.05 + i * 0.04,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="inline-block whitespace-pre"
-            >
-              {word}
-              {i < words.length - 1 ? ' ' : ''}
-            </motion.span>
-          ))}
-        </h1>
-      )}
+      {/* Manifesto monumental.
+          Animação word-by-word vem do <ConstructionSection> via data-construct.
+          O h1 fica como DOM puro pra preservar LCP — quando o hook inicializa,
+          ele aplica SplitText e estado inicial. */}
+      <h1
+        data-construct="heading"
+        aria-label={site.manifesto}
+        className="display-monumental"
+      >
+        {site.manifesto}
+      </h1>
     </div>
   )
 }
