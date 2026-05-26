@@ -75,11 +75,16 @@ export function Manifesto() {
   }, [reduced])
 
   /**
-   * Animação do manifesto h1 — chars caindo de costas com flip 3D.
-   * Inspirado em demos.gsap.com/demo/revert-after-animation.
+   * Animação do manifesto h1 — typewriter clean char-by-char.
+   * Cada letra aparece em sequência (opacity), ease linear, stagger
+   * regular — simula ritmo de digitação. Combina com vocabulário
+   * terminal/monospace do site ($ git log, cursor █).
    *
-   * Aguarda fontes carregarem (document.fonts.ready) pra evitar
-   * SplitText quebrar com métricas erradas e re-layout durante animação.
+   * Aguarda document.fonts.ready pra evitar SplitText quebrar com
+   * métricas erradas e re-layout durante animação.
+   *
+   * onComplete → split.revert() restaura DOM puro (acessibilidade +
+   * select-text).
    */
   useEffect(() => {
     if (reduced) return
@@ -98,7 +103,7 @@ export function Manifesto() {
       if (cancelled || !h1) return
       gsap.registerPlugin(SplitText)
 
-      // Parent visível agora (CSS começou em opacity 0 pra evitar flash)
+      // Parent visível (CSS começou em opacity 0 pra evitar flash)
       gsap.set(h1, { opacity: 1 })
 
       const split = SplitText.create(h1, {
@@ -107,14 +112,10 @@ export function Manifesto() {
       })
 
       const tween = gsap.from(split.chars, {
-        duration: 1,
         opacity: 0,
-        scale: 0,
-        y: 80,
-        rotationX: 180,
-        transformOrigin: '0% 50% -50',
-        ease: 'back',
-        stagger: 0.05,
+        duration: 0.05,
+        stagger: 0.04,
+        ease: 'none',
         onComplete: () => {
           split.revert()
         },
@@ -198,7 +199,7 @@ export function Manifesto() {
         ref={h1Ref}
         aria-label={site.manifesto}
         className="display-monumental"
-        style={{ opacity: reduced ? 1 : 0, perspective: '600px' }}
+        style={{ opacity: reduced ? 1 : 0 }}
       >
         {site.manifesto}
       </h1>
