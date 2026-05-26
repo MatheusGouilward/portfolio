@@ -1,9 +1,10 @@
 'use client'
 
 import { motion, useReducedMotion } from 'motion/react'
-import { Fragment, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, useContext, type CSSProperties, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { useBlueprint } from './blueprint-provider'
+import { ConstructionContext } from './construction-section'
 
 type HandNoteProps = {
   /** Texto handwritten. Voz humana, sem nomear lei. Use `\n` pra quebra explícita. */
@@ -58,6 +59,7 @@ export function HandNote({
 }: HandNoteProps) {
   const { on } = useBlueprint()
   const reduced = useReducedMotion() ?? false
+  const inConstruction = useContext(ConstructionContext)
 
   const hasExplicitBreaks = note.includes('\n')
   const lines = hasExplicitBreaks ? note.split('\n') : null
@@ -121,10 +123,25 @@ export function HandNote({
     )
   }
 
-  // BRANCH 2 — default (Motion whileInView once:true).
-  // Quando a section pai tem <ConstructionSection layers.handnote>, o hook
-  // toma controle via data-construct e o Motion whileInView fica dormente
-  // (o hook aplica gsap.set no element imediatamente após mount).
+  // BRANCH 2 — Dentro de <ConstructionSection>: o hook GSAP controla.
+  // Span puro com rotation inline; SplitText vai quebrar em chars e
+  // gsap.set aplica estado inicial. Sem Motion pra evitar conflito de
+  // transforms (Motion + GSAP brigando em y/rotate causava "animação
+  // inexistente" visual).
+  if (inConstruction) {
+    return (
+      <span
+        data-construct="handnote"
+        aria-hidden={!on}
+        className={baseClassName}
+        style={{ ...baseStyle, transform: `rotate(${rotation}deg)` }}
+      >
+        {content}
+      </span>
+    )
+  }
+
+  // BRANCH 3 — fora de ConstructionSection: Motion whileInView once:true.
   return (
     <motion.span
       data-construct="handnote"

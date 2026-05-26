@@ -1,14 +1,22 @@
 'use client'
 
-import { useRef, type ReactNode } from 'react'
-import {
-  useScrollConstruction,
-} from '@/lib/scroll-construction'
+import { createContext, useRef, type ReactNode } from 'react'
+import { useScrollConstruction } from '@/lib/scroll-construction'
 
 /**
- * ConstructionSection — wrapper client genérico que aplica a construção em
- * camadas (CLAUDE.md §23) numa <section>. Cada instância tem seu próprio
- * useRef + ScrollTrigger master (regra "1 trigger por seção").
+ * Context que sinaliza pros descendants que eles estão sob controle
+ * do scroll-construction hook. Componentes como <HandNote> consomem
+ * esse flag pra evitar disparar animações próprias (Motion whileInView)
+ * que conflitariam com as do hook GSAP.
+ *
+ * default false — fora de uma ConstructionSection, comportamento normal.
+ */
+export const ConstructionContext = createContext<boolean>(false)
+
+/**
+ * ConstructionSection — wrapper client genérico que aplica a construção
+ * em camadas (CLAUDE.md §23) numa <section>. Cada instância tem seu
+ * próprio useRef + ScrollTrigger master (regra "1 trigger por seção").
  *
  * Children marcam elementos com `data-construct="heading|body|handnote"`
  * pra serem capturados pelo hook. Refs: TASKS.md #39.
@@ -24,15 +32,10 @@ type Layers = Partial<{
 
 type ConstructionSectionProps = {
   children: ReactNode
-  /** Quais camadas ativar nesta section. Default: heading + body + handnote (pass 1+2). */
   layers?: Layers
-  /** Override do ScrollTrigger start. Default 'top 85%'. */
   start?: string
-  /** Override do ScrollTrigger end. Default 'top 20%'. */
   end?: string
-  /** Override do scrub. Default 0.5. */
   scrub?: number
-  /** Quando false, hook não inicializa (mantém estado final imediato). */
   enabled?: boolean
   className?: string
   id?: string
@@ -55,8 +58,10 @@ export function ConstructionSection({
   useScrollConstruction(ref, { layers, start, end, scrub, enabled })
 
   return (
-    <section ref={ref} id={id} className={className} {...aria}>
-      {children}
-    </section>
+    <ConstructionContext.Provider value={enabled !== false}>
+      <section ref={ref} id={id} className={className} {...aria}>
+        {children}
+      </section>
+    </ConstructionContext.Provider>
   )
 }

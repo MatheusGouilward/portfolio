@@ -71,6 +71,18 @@ export function useScrollConstruction(
       }
 
       const splits: Array<{ revert: () => void }> = []
+
+      // Detecta se a section já passou da viewport ao mount. Se sim,
+      // pulamos a animação (renderiza estado final) — caso contrário a
+      // timeline scrub pode pisar no estado final sem animar, deixando
+      // o conteúdo invisível (gsap.set inicial sem chance de reverter).
+      const rect = section.getBoundingClientRect()
+      const viewportH = window.innerHeight
+      // "passed" = section topo já está acima da viewport quando ela
+      // ENTRA em campo de uma trigger 'top 85%'. Se section.top já está
+      // abaixo de 35% da viewport (end position), trigger já passou.
+      const alreadyPassed = rect.top < viewportH * 0.35
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
@@ -88,30 +100,35 @@ export function useScrollConstruction(
         headings.forEach((h) => {
           const split = new SplitText(h, { type: 'words', wordsClass: 'sc-word' })
           splits.push(split)
-          gsap.set(split.words, {
-            opacity: 0,
-            y: 12,
-            filter: 'blur(4px)',
-            scale: 0.94,
-            rotation: () => gsap.utils.random(-1.5, 1.5),
-            transformOrigin: 'center bottom',
-            display: 'inline-block',
-            willChange: 'transform, opacity, filter',
-          })
-          tl.to(
-            split.words,
-            {
-              opacity: 1,
-              y: 0,
-              filter: 'blur(0px)',
-              scale: 1,
-              rotation: 0,
-              ease: 'power3.out',
-              duration: 0.5,
-              stagger: { each: 0.06, from: 'start' },
-            },
-            0.1,
-          )
+          // Se section já passou (above the fold), pula estado inicial
+          // invisível — gsap.set seria aplicado mas timeline scrub não
+          // animaria (já está em progress 1).
+          if (!alreadyPassed) {
+            gsap.set(split.words, {
+              opacity: 0,
+              y: 12,
+              filter: 'blur(4px)',
+              scale: 0.94,
+              rotation: () => gsap.utils.random(-1.5, 1.5),
+              transformOrigin: 'center bottom',
+              display: 'inline-block',
+              willChange: 'transform, opacity, filter',
+            })
+            tl.to(
+              split.words,
+              {
+                opacity: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                scale: 1,
+                rotation: 0,
+                ease: 'power3.out',
+                duration: 0.5,
+                stagger: { each: 0.06, from: 'start' },
+              },
+              0.1,
+            )
+          }
         })
       }
 
@@ -123,20 +140,22 @@ export function useScrollConstruction(
         bodies.forEach((b) => {
           const split = new SplitText(b, { type: 'lines', linesClass: 'sc-line' })
           splits.push(split)
-          gsap.set(split.lines, {
-            clipPath: 'inset(0 0 100% 0)',
-            willChange: 'clip-path',
-          })
-          tl.to(
-            split.lines,
-            {
-              clipPath: 'inset(0 0 0% 0)',
-              ease: 'power2.out',
-              duration: 0.5,
-              stagger: 0.08,
-            },
-            0.3,
-          )
+          if (!alreadyPassed) {
+            gsap.set(split.lines, {
+              clipPath: 'inset(0 0 100% 0)',
+              willChange: 'clip-path',
+            })
+            tl.to(
+              split.lines,
+              {
+                clipPath: 'inset(0 0 0% 0)',
+                ease: 'power2.out',
+                duration: 0.5,
+                stagger: 0.08,
+              },
+              0.3,
+            )
+          }
         })
       }
 
@@ -151,35 +170,40 @@ export function useScrollConstruction(
             charsClass: 'sc-char',
           })
           splits.push(split)
-          gsap.set(split.chars, {
-            opacity: 0,
-            y: 6,
-            filter: 'blur(3px)',
-            scale: 0.88,
-            rotation: () => gsap.utils.random(-3, 3),
-            transformOrigin: 'center bottom',
-            display: 'inline-block',
-            willChange: 'transform, opacity, filter',
-          })
-          tl.to(
-            split.chars,
-            {
-              opacity: 1,
-              y: 0,
-              filter: 'blur(0px)',
-              scale: 1,
-              rotation: 0,
-              ease: 'power2.out',
-              duration: 0.4,
-              stagger: { each: 0.025, from: 'start' },
-            },
-            0.6,
-          )
+          if (!alreadyPassed) {
+            gsap.set(split.chars, {
+              opacity: 0,
+              y: 6,
+              filter: 'blur(3px)',
+              scale: 0.88,
+              rotation: () => gsap.utils.random(-3, 3),
+              transformOrigin: 'center bottom',
+              display: 'inline-block',
+              willChange: 'transform, opacity, filter',
+            })
+            tl.to(
+              split.chars,
+              {
+                opacity: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                scale: 1,
+                rotation: 0,
+                ease: 'power2.out',
+                duration: 0.4,
+                stagger: { each: 0.025, from: 'start' },
+              },
+              0.6,
+            )
+          }
         })
       }
 
       // CAMADAS 1, 2, 5 (grid, frame, arrows) — Pass 3 pós-launch.
-      // Data-attrs pra essas ficam ignorados até implementar.
+
+      // Força refresh do ScrollTrigger pra recalcular positions com
+      // o DOM já com SplitText spans inseridos.
+      ScrollTrigger.refresh()
 
       kill = () => {
         tl.scrollTrigger?.kill()
