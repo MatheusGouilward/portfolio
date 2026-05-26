@@ -10,15 +10,20 @@ const STRIKE_PATH = 'M 1 5 Q 25 3.4, 50 5 T 99 5'
 /**
  * Manifesto — H1 monumental + riscada handwritten.
  *
- * Animação word-by-word do h1 agora vem do hook `useScrollConstruction`
- * (via `data-construct="heading"`) — não mais via Motion local. Mantém
- * apenas a riscada (Motion pathLength) + parallax assimétrico da riscada.
+ * Animação word-by-word do h1 usa Motion whileInView (entrada one-shot,
+ * not scroll-locked). CLAUDE.md §23 prescreve esse padrão pra conteúdo
+ * above-the-fold — scroll-construction não animaria visualmente (trigger
+ * já "passed" ao mount).
  *
- * Ref §23 CLAUDE.md, TASKS.md #39.
+ * Riscada usa Motion (pathLength SVG) + parallax assimétrico via GSAP
+ * scrolllTrigger no hero section.
+ *
+ * Ref §23 CLAUDE.md.
  */
 export function Manifesto() {
   const reduced = useReducedMotion() ?? false
   const { on } = useBlueprint()
+  const words = site.manifesto.split(' ')
   const { previous } = site.manifestoMeta
   const heroRef = useRef<HTMLDivElement>(null)
   const riscadaRef = useRef<HTMLDivElement>(null)
@@ -126,17 +131,36 @@ export function Manifesto() {
         </span>
       </div>
 
-      {/* Manifesto monumental.
-          Animação word-by-word vem do <ConstructionSection> via data-construct.
-          O h1 fica como DOM puro pra preservar LCP — quando o hook inicializa,
-          ele aplica SplitText e estado inicial. */}
-      <h1
-        data-construct="heading"
-        aria-label={site.manifesto}
-        className="display-monumental"
-      >
-        {site.manifesto}
-      </h1>
+      {/* Manifesto monumental — Motion whileInView (entrada one-shot).
+          NÃO usa scroll-construction porque section está above the fold;
+          scroll-construction não animaria visualmente (trigger já passed
+          ao mount). CLAUDE.md §23 prescreve Motion aqui pra preservar LCP. */}
+      {reduced ? (
+        <h1 className="display-monumental">{site.manifesto}</h1>
+      ) : (
+        <h1 aria-label={site.manifesto} className="display-monumental">
+          {words.map((word, i) => (
+            <motion.span
+              key={`${word}-${i}`}
+              aria-hidden
+              // Reveal top→bottom via clip-path — cada palavra "sobe sendo
+              // escrita". LCP preservado: pixel é PINTADO (só clipado),
+              // não invisible-opacity-0 que atrasaria o paint.
+              initial={{ clipPath: 'inset(0 0 100% 0)', y: 8 }}
+              animate={{ clipPath: 'inset(0 0 0% 0)', y: 0 }}
+              transition={{
+                duration: 0.72,
+                delay: 0.05 + i * 0.05,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="inline-block whitespace-pre"
+            >
+              {word}
+              {i < words.length - 1 ? ' ' : ''}
+            </motion.span>
+          ))}
+        </h1>
+      )}
     </div>
   )
 }

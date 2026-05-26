@@ -20,7 +20,11 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 pb-12 sm:px-10">
-      <ConstructionSection
+      {/* Hero/Manifesto — section above the fold. Usa <section> normal
+          (não ConstructionSection) porque scroll-construction não anima
+          visualmente acima do fold (trigger 'top 85%' já passed no mount).
+          Manifesto e HandNote do gutter usam Motion whileInView. */}
+      <section
         aria-labelledby="manifesto"
         className="relative mt-24 sm:mt-32"
       >
@@ -65,7 +69,7 @@ export default function HomePage() {
             Como cheguei aqui →
           </Link>
         </div>
-      </ConstructionSection>
+      </section>
 
       <ConstructionSection
         aria-labelledby="cases"
